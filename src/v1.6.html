@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agile Mirroring Reader v1.6</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Pass 1: Priming/Decoding Blur */
+        .blur-text { filter: blur(12px); transition: filter 0.2s ease; cursor: pointer; }
+        .blur-text:hover, .blur-text.revealed { filter: blur(0); color: #2563eb; }
+        
+        /* Active Focus Logic */
+        .active-segment { 
+            border-left: 8px solid #2563eb !important; 
+            background: #ffffff;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-2px);
+            z-index: 10;
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .segment-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 h-[100dvh] flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 z-30 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            </div>
+            <div>
+                <h1 class="font-black text-xl tracking-tight leading-none">Agile Reader</h1>
+                <span class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">v1.6 • Production Engine</span>
+            </div>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+            <button onclick="updateMode('flow')" id="btn-flow" class="px-6 py-2 rounded-xl text-sm font-bold transition-all">Flow (P1/4)</button>
+            <button onclick="updateMode('drill')" id="btn-drill" class="px-6 py-2 rounded-xl text-sm font-bold transition-all">Drill (P2/3)</button>
+        </div>
+
+        <!-- Speed & Editor -->
+        <div class="flex items-center gap-4">
+            <div class="flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm">
+                <button onclick="updateSpeed(0.8)" id="spd-0.8" class="w-10 h-8 text-xs font-black rounded-lg">S</button>
+                <button onclick="updateSpeed(1.0)" id="spd-1.0" class="w-10 h-8 text-xs font-black rounded-lg">N</button>
+                <button onclick="updateSpeed(1.2)" id="spd-1.2" class="w-10 h-8 text-xs font-black rounded-lg">F</button>
+            </div>
+            <button onclick="toggleEditor()" class="p-3 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-blue-600 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-72 bg-white border-r border-slate-200 overflow-y-auto hidden lg:block p-6 custom-scroll">
+            <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 pb-2 border-b">Navigation</h2>
+            <nav id="toc-nav" class="space-y-1"></nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col relative bg-slate-50 overflow-hidden">
+            <div id="scroll-container" class="flex-1 overflow-y-auto p-4 md:p-12 custom-scroll pb-64">
+                <div id="render-target" class="max-w-3xl mx-auto space-y-6">
+                    <div id="init-loader" class="py-20 text-center">
+                        <div class="animate-pulse text-slate-300 font-bold">Synchronizing Content...</div>
+                    </div>
+                    <div id="segments-container" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <!-- HUD Control Bar -->
+            <div class="absolute bottom-10 left-0 right-0 flex justify-center px-6 pointer-events-none">
+                <div class="bg-slate-900 w-full max-w-2xl rounded-[3rem] shadow-2xl p-5 flex items-center gap-6 border border-white/10 pointer-events-auto backdrop-blur-xl">
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeSegment(-1)" class="w-12 h-12 rounded-full text-white/40 hover:text-white flex items-center justify-center transition-colors">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                        </button>
+                        <button onclick="handlePlayToggle()" id="main-play-btn" class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:bg-blue-500 active:scale-90 transition-all">
+                            <svg id="icon-play" class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg id="icon-pause" class="w-10 h-10 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <button onclick="changeSegment(1)" class="w-12 h-12 rounded-full text-white/40 hover:text-white flex items-center justify-center transition-colors">
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                        </button>
+                    </div>
+                    <div class="flex-1 flex flex-col justify-center border-l border-white/10 pl-6">
+                        <div class="flex justify-between items-end mb-2">
+                            <span id="ui-status" class="text-[10px] font-black uppercase text-blue-400 tracking-widest">Ready</span>
+                            <span id="ui-progress-text" class="text-[10px] font-black text-white/30 tracking-tighter">0 / 0</span>
+                        </div>
+                        <div class="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                            <div id="ui-progress-bar" class="h-full bg-blue-600 w-0 transition-all duration-500 shadow-[0_0_15px_rgba(37,99,235,0.5)]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Status Bar -->
+    <footer class="bg-slate-900 text-[10px] font-mono text-slate-500 px-6 py-2 flex justify-between items-center z-40 border-t border-white/5">
+        <div id="sys-log" class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            STATUS: SYSTEM NOMINAL
+        </div>
+        <div class="flex gap-4">
+            <span id="voice-status">VOICE: CHECKING...</span>
+            <span class="text-slate-700">KB: Space, Arrows, 1-3</span>
+        </div>
+    </footer>
+
+    <!-- Editor Overlay -->
+    <div id="editor-ui" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-6 hidden">
+        <div class="bg-white w-full max-w-5xl h-[85vh] rounded-[3rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div class="p-8 border-b flex justify-between items-center">
+                <div>
+                    <h3 class="font-black text-2xl text-slate-800">Markup Editor</h3>
+                    <p class="text-xs text-slate-400 font-bold uppercase mt-1">Format: [es] Spanish | [en] English [pause:3]</p>
+                </div>
+                <button onclick="toggleEditor()" class="p-4 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">✕</button>
+            </div>
+            <div class="flex-1 p-8 bg-slate-50">
+                <textarea id="raw-input" class="w-full h-full p-8 bg-white border border-slate-200 rounded-[2rem] font-mono text-sm shadow-inner outline-none focus:ring-4 focus:ring-blue-100 transition-all custom-scroll"></textarea>
+            </div>
+            <div class="p-8 flex justify-end gap-4 border-t bg-white">
+                <button onclick="toggleEditor()" class="px-8 py-3 font-bold text-slate-400 hover:text-slate-600 transition-colors">Discard</button>
+                <button onclick="applyNewContent()" class="px-14 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-200 hover:bg-blue-700 active:scale-95 transition-all">SYNC & START</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ENGINE STATE
+         * Hierarchical storage for drill segments and audio parameters.
+         */
+        const State = {
+            mode: 'flow', 
+            speed: 1.0, 
+            isPlaying: false, 
+            index: -1, 
+            segments: [], 
+            voices: { es: null, en: null }
+        };
+
+        const DEFAULT_MD = `# Stage 1: The Foundations\n## Section 1.1: Common Greetings\n[es] Hola, ¿cómo te va hoy? | [en] Hello, how is it going today?\n[es] Todo bien, gracias. ¿Y tú? | [en] All good, thanks. And you?\n\n## Section 1.2: Movement\n[es] ¿Dónde está la estación? | [en] Where is the station? [pause:5]\n[es] Está a dos cuadras. | [en] It is two blocks away.`;
+
+        function log(msg) {
+            const el = document.getElementById('sys-log');
+            if (el) el.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-500"></span> LOG: ${msg.toUpperCase()}`;
+        }
+
+        // --- System Boot ---
+        async function bootstrap() {
+            log("Initializing Engine...");
+            
+            // Voice Detection Logic
+            const loadVoices = () => {
+                const v = window.speechSynthesis.getVoices();
+                if (v.length > 0) {
+                    State.voices.es = v.find(x => x.lang.startsWith('es-')) || v.find(x => x.name.includes('Spanish'));
+                    State.voices.en = v.find(x => x.lang.startsWith('en-')) || v.find(x => x.name.includes('English'));
+                    const vStat = document.getElementById('voice-status');
+                    if (vStat) vStat.innerText = `VOICE: ${State.voices.es ? 'ES-OK' : 'ES-MISS'} ${State.voices.en ? 'EN-OK' : 'EN-MISS'}`;
+                }
+            };
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+
+            // Persistence Hydration
+            let saved = DEFAULT_MD;
+            try {
+                const stored = localStorage.getItem('agile_v7_md');
+                if (stored) saved = stored;
+            } catch (e) { log("Storage Restricted"); }
+            
+            document.getElementById('raw-input').value = saved;
+
+            // First Render
+            parse(saved);
+            updateMode(State.mode);
+            updateSpeed(State.speed);
+
+            document.getElementById('init-loader').classList.add('hidden');
+            log("Engine Online");
+        }
+
+        /**
+         * RESILIENT PARSER
+         * Logic: Identify headings for TOC, then extract ES|EN pairs.
+         * Falls back to simple pipe split if tags are missing.
+         */
+        function parse(md) {
+            const lines = md.split('\n');
+            const segs = [];
+            const toc = [];
+            let currentSection = "General";
+
+            lines.forEach((l) => {
+                const trimmed = l.trim();
+                const h = trimmed.match(/^(#{1,3})\s+(.*)/);
+                
+                // Flexible regex: tags are preferred but pipe is the absolute truth
+                const sWithTags = trimmed.match(/\[es\](.*)\|\[en\](.*)/i);
+                const sSimple = !sWithTags && trimmed.includes('|') ? trimmed.split('|') : null;
+
+                if (h) {
+                    toc.push({ lvl: h[1].length, title: h[2].trim() });
+                    currentSection = h[2].trim();
+                } else if (sWithTags) {
+                    const enPart = sWithTags[2].trim();
+                    const pMatch = enPart.match(/(.*)\[pause:(\d+)\]/i);
+                    segs.push({
+                        es: sWithTags[1].trim(),
+                        en: pMatch ? pMatch[1].trim() : enPart,
+                        pause: pMatch ? parseInt(pMatch[2]) : null,
+                        section: currentSection
+                    });
+                } else if (sSimple && sSimple.length === 2) {
+                    segs.push({ es: sSimple[0].trim(), en: sSimple[1].trim(), pause: null, section: currentSection });
+                }
+            });
+
+            State.segments = segs;
+            
+            // Build TOC
+            document.getElementById('toc-nav').innerHTML = toc.map(t => `<button onclick="jumpTo('${t.title}')" class="w-full text-left px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-100 transition-all ${t.lvl === 1 ? 'text-slate-900 pt-6' : 'text-slate-400 pl-6'}">${t.title.toUpperCase()}</button>`).join('');
+            
+            renderSegments();
+            document.getElementById('ui-status').innerText = `${segs.length} Segments Loaded`;
+        }
+
+        function renderSegments() {
+            const container = document.getElementById('segments-container');
+            if (!container) return;
+            
+            container.innerHTML = State.segments.map((s, i) => `
+                <div id="seg-${i}" onclick="select(${i})" class="segment-card p-12 bg-white border border-slate-200 rounded-[3.5rem] cursor-pointer">
+                    <div class="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] mb-4 opacity-40">${s.section}</div>
+                    <div class="text-4xl font-bold tracking-tight mb-8 ${State.mode === 'flow' ? 'text-slate-900' : 'text-slate-300'}" id="v-es-${i}">${s.es}</div>
+                    <div class="text-2xl text-slate-500 font-semibold ${State.mode === 'flow' ? 'blur-text' : 'hidden'}" id="v-en-${i}">${s.en}</div>
+                </div>`).join('');
+        }
+
+        // --- Controller UI ---
+        function updateMode(m) {
+            State.mode = m;
+            renderSegments();
+            document.getElementById('btn-flow').className = `px-8 py-2 rounded-xl text-sm font-black transition-all ${m === 'flow' ? 'bg-white shadow-lg text-blue-600' : 'text-slate-400 hover:text-slate-600'}`;
+            document.getElementById('btn-drill').className = `px-8 py-2 rounded-xl text-sm font-black transition-all ${m === 'drill' ? 'bg-white shadow-lg text-blue-600' : 'text-slate-400 hover:text-slate-600'}`;
+        }
+
+        function updateSpeed(s) {
+            State.speed = s;
+            [0.8, 1.0, 1.2].forEach(v => {
+                const el = document.getElementById(`spd-${v.toFixed(1)}`);
+                if (el) el.className = `w-10 h-8 text-xs font-black rounded-lg transition-all ${s === v ? 'bg-slate-900 text-white shadow-md scale-110' : 'text-slate-400 hover:bg-slate-50'}`;
+            });
+        }
+
+        function toggleEditor() { document.getElementById('editor-ui').classList.toggle('hidden'); }
+        function applyNewContent() {
+            const val = document.getElementById('raw-input').value;
+            try { localStorage.setItem('agile_v7_md', val); } catch(e){}
+            parse(val);
+            toggleEditor();
+        }
+
+        function select(i) { stop(); State.index = i; highlight(i); }
+        function jumpTo(title) { const idx = State.segments.findIndex(s => s.section === title); if(idx !== -1) select(idx); }
+
+        // --- Audio Engine ---
+        let audioTimer = null;
+        function handlePlayToggle() { if (State.isPlaying) stop(); else play(); }
+        
+        function stop() { 
+            State.isPlaying = false; window.speechSynthesis.cancel(); clearTimeout(audioTimer);
+            document.getElementById('icon-play').classList.remove('hidden');
+            document.getElementById('icon-pause').classList.add('hidden');
+            document.getElementById('ui-status').innerText = "Session Paused";
+        }
+
+        function play() {
+            if (State.segments.length === 0) return;
+            if (State.index === -1) State.index = 0;
+            State.isPlaying = true;
+            document.getElementById('icon-play').classList.add('hidden');
+            document.getElementById('icon-pause').classList.remove('hidden');
+            run();
+        }
+
+        /**
+         * THE PRODUCTION LOOP
+         * In Drill mode: Plays EN -> Dynamic Pause (Wait for production) -> Plays ES (Reveal).
+         * In Flow mode: Plays ES -> Short Breath -> Next.
+         */
+        async function run() {
+            if (!State.isPlaying || State.index >= State.segments.length) { stop(); return; }
+            const s = State.segments[State.index];
+            highlight(State.index);
+
+            const stat = document.getElementById('ui-status');
+            if (State.mode === 'flow') {
+                stat.innerText = "Shadowing (ES)";
+                await talk(s.es, 'es');
+                await wait(1500);
+                changeSegment(1);
+            } else {
+                stat.innerText = "Prompting (EN)";
+                await talk(s.en, 'en');
+                stat.innerText = "Production Gap...";
+                
+                // Adaptive Pause Logic
+                const baseWait = 2000;
+                const perWord = 500;
+                const pTime = s.pause ? s.pause * 1000 : (baseWait + (s.es.split(' ').length * perWord));
+                await wait(pTime);
+
+                if (!State.isPlaying) return;
+                
+                // Reveal Visuals
+                const esText = document.getElementById(`v-es-${State.index}`);
+                const enView = document.getElementById(`v-en-${State.index}`);
+                if (enView) enView.classList.remove('hidden', 'blur-text');
+                if (esText) esText.classList.add('text-blue-600');
+                
+                stat.innerText = "Confirmation (ES)";
+                await talk(s.es, 'es');
+                await wait(2000);
+                changeSegment(1);
+            }
+        }
+
+        function talk(txt, lang) {
+            return new Promise(res => {
+                if (!State.isPlaying) return res();
+                const u = new SpeechSynthesisUtterance(txt);
+                u.voice = State.voices[lang];
+                u.rate = State.speed;
+                u.onend = res;
+                u.onerror = res;
+                window.speechSynthesis.speak(u);
+            });
+        }
+
+        function wait(ms) { return new Promise(res => audioTimer = setTimeout(res, ms)); }
+
+        function highlight(i) {
+            document.querySelectorAll('.active-segment').forEach(el => el.classList.remove('active-segment'));
+            const el = document.getElementById(`seg-${i}`);
+            if (el) { 
+                el.classList.add('active-segment'); 
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+            }
+            document.getElementById('ui-progress-bar').style.width = `${((i+1)/State.segments.length)*100}%`;
+            document.getElementById('ui-progress-text').innerText = `${i+1} / ${State.segments.length}`;
+        }
+
+        function changeSegment(dir) {
+            const next = State.index + dir;
+            if (next >= 0 && next < State.segments.length) { 
+                State.index = next; 
+                if(State.isPlaying) run(); 
+                else highlight(next); 
+            }
+            else stop();
+        }
+
+        // --- Keyboard Bindings ---
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'TEXTAREA') return;
+            if (e.code === 'Space') { e.preventDefault(); handlePlayToggle(); }
+            if (e.code === 'ArrowRight') { e.preventDefault(); changeSegment(1); }
+            if (e.code === 'ArrowLeft') { e.preventDefault(); changeSegment(-1); }
+            if (e.key === '1') updateSpeed(0.8);
+            if (e.key === '2') updateSpeed(1.0);
+            if (e.key === '3') updateSpeed(1.2);
+        });
+
+        // Bootstrap on delay to let browser stabilize
+        setTimeout(bootstrap, 800);
+    </script>
+</body>
+</html>

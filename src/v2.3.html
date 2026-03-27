@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agile Mirroring Reader v2.3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        .active-row { background-color: rgba(37, 99, 235, 0.08) !important; border-left: 4px solid #2563eb !important; }
+        .row-hover:hover { background-color: rgba(0,0,0,0.02); }
+        
+        .layout-side-by-side .seg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+        .layout-over-under .seg-grid { display: flex; flex-direction: column; gap: 0.1rem; }
+        .layout-plain .seg-en { display: none; }
+        
+        @media (max-width: 768px) {
+            .layout-side-by-side .seg-grid { grid-template-columns: 1fr; gap: 0.25rem; }
+            header h1 { font-size: 0.75rem; }
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .active-row .seg-es { color: #2563eb; font-weight: 700; transition: color 0.3s ease; }
+    </style>
+</head>
+<body class="bg-white text-slate-900 h-[100dvh] flex flex-col overflow-hidden">
+
+    <header class="bg-slate-900 text-white px-4 py-2 flex items-center justify-between z-40 border-b border-white/10 shadow-md">
+        <div class="flex items-center gap-3 overflow-hidden">
+            <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+            </button>
+            <div class="flex flex-col overflow-hidden">
+                <h1 class="font-black text-[10px] tracking-tight leading-none uppercase italic text-blue-400">Agile Reader v2.3</h1>
+                <div id="sys-breadcrumb" class="text-[8px] text-slate-500 font-bold uppercase truncate max-w-[150px] md:max-w-none">System Standby</div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <div class="hidden md:flex bg-white/5 rounded-md p-0.5 border border-white/10 mr-2">
+                <button onclick="setLayout('side-by-side')" id="lay-side" class="p-1 rounded hover:bg-white/10"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h8v14H3V5zm10 0h8v14h-8V5z"/></svg></button>
+                <button onclick="setLayout('over-under')" id="lay-over" class="p-1 rounded hover:bg-white/10"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h18v6H3V5zm0 8h18v6H3v-6z"/></svg></button>
+                <button onclick="setLayout('plain')" id="lay-plain" class="p-1 rounded hover:bg-white/10"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/></svg></button>
+            </div>
+
+            <button onclick="toggleVoices()" class="p-1.5 hover:bg-white/10 rounded transition-colors" title="Voices">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            </button>
+            <button onclick="toggleEditor()" class="p-1.5 hover:bg-white/10 rounded transition-colors" title="Edit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+            <button onclick="toggleHelp()" class="p-1.5 hover:bg-blue-600 rounded transition-colors" title="Help (?)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        <aside id="sidebar" class="absolute inset-y-0 left-0 w-64 bg-slate-50 border-r border-slate-200 overflow-y-auto z-30 transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0 custom-scroll">
+            <div class="p-4">
+                <h2 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b pb-2">Course Navigation</h2>
+                <nav id="toc-nav" class="space-y-0.5"></nav>
+            </div>
+        </aside>
+
+        <main id="main-content" class="flex-1 flex flex-col relative bg-white overflow-hidden">
+            <div class="bg-slate-50 border-b border-slate-200 px-4 py-1.5 flex items-center justify-between gap-4 overflow-x-auto no-scrollbar">
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center bg-white border border-slate-200 rounded p-0.5 shadow-sm">
+                        <button onclick="updateMode('flow')" id="btn-flow" class="px-3 py-0.5 text-[9px] font-bold rounded">FLOW</button>
+                        <button onclick="updateMode('drill')" id="btn-drill" class="px-3 py-0.5 text-[9px] font-bold rounded">DRILL</button>
+                    </div>
+                    <button onclick="toggleDirection()" id="btn-dir" class="px-3 py-1 bg-white border border-slate-200 rounded text-[9px] font-black shadow-sm transition-colors hover:bg-slate-100">EN ➔ ES</button>
+                    <button onclick="toggleAutoPause()" id="btn-auto-pause" class="px-3 py-1 bg-white border border-slate-200 rounded text-[9px] font-black shadow-sm transition-colors hover:bg-slate-100" title="Auto-Pause (Q)">AUTO-PAUSE: OFF</button>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded p-0.5 shadow-sm">
+                        <button onclick="updateSpeed(0.8)" id="spd-0.8" class="w-7 h-5 text-[9px] font-bold rounded">S</button>
+                        <button onclick="updateSpeed(1.0)" id="spd-1.0" class="w-7 h-5 text-[9px] font-bold rounded">N</button>
+                        <button onclick="updateSpeed(1.2)" id="spd-1.2" class="w-7 h-5 text-[9px] font-bold rounded">F</button>
+                    </div>
+                    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded p-0.5 shadow-sm">
+                        <button onclick="updatePause(0)" id="ps-0" class="w-7 h-5 text-[9px] font-bold rounded" title="Continuous Flow">0</button>
+                        <button onclick="updatePause(1)" id="ps-1" class="w-7 h-5 text-[9px] font-bold rounded">S</button>
+                        <button onclick="updatePause(2)" id="ps-2" class="w-7 h-5 text-[9px] font-bold rounded">M</button>
+                        <button onclick="updatePause(3)" id="ps-3" class="w-7 h-5 text-[9px] font-bold rounded">L</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="scroll-container" class="flex-1 overflow-y-auto custom-scroll scroll-smooth pb-32">
+                <div id="render-target" class="max-w-6xl mx-auto py-2 layout-side-by-side"></div>
+            </div>
+
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4">
+                <div class="bg-slate-900 rounded-full shadow-2xl p-2.5 flex items-center gap-3 border border-white/10 pointer-events-auto backdrop-blur-md">
+                    <button onclick="changeSegment(-1)" class="w-10 h-10 rounded-full text-white/50 hover:text-white flex items-center justify-center transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    </button>
+                    <button onclick="handlePlayToggle()" id="main-play-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:bg-blue-500 active:scale-95 transition-all">
+                        <svg id="icon-play" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg id="icon-pause" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    <button onclick="changeSegment(1)" class="w-10 h-10 rounded-full text-white/50 hover:text-white flex items-center justify-center transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                    </button>
+                    <div class="flex-1 pr-4 border-l border-white/10 ml-2">
+                        <div class="flex justify-between items-center mb-1">
+                            <span id="ui-status" class="text-[8px] font-black uppercase text-blue-400 tracking-widest">Ready</span>
+                        </div>
+                        <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                            <div id="ui-progress-bar" class="h-full bg-blue-500 w-0 transition-all"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="voice-modal" class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6 hidden">
+        <div class="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-8 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-xl">Voice Configuration</h3>
+                <button onclick="toggleVoices()" class="text-slate-400">✕</button>
+            </div>
+            <div class="p-8 space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Primary Spanish</label>
+                    <select id="voice-es" class="w-full p-3 bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Primary English</label>
+                    <select id="voice-en" class="w-full p-3 bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"></select>
+                </div>
+            </div>
+            <div class="p-8 border-t bg-slate-50 flex justify-end">
+                <button onclick="saveVoices()" class="px-8 py-3 bg-blue-600 text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-blue-200">Apply Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="help-modal" class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6 hidden">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-10 animate-in fade-in zoom-in duration-200 text-center">
+            <h3 class="font-black text-2xl mb-8">Systems Ergonomics</h3>
+            <div class="space-y-4 text-left text-xs font-semibold text-slate-600">
+                <div class="flex justify-between items-center"><span>Play / Pause</span> <kbd class="px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-md font-black shadow-sm text-slate-900 uppercase">Space / W</kbd></div>
+                <div class="flex justify-between items-center"><span>Repeat Sentence</span> <kbd class="px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-md font-black shadow-sm text-slate-900 uppercase">S / ↓</kbd></div>
+                <div class="flex justify-between items-center"><span>Auto-Pause Toggle</span> <kbd class="px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-md font-black shadow-sm text-slate-900 uppercase">Q</kbd></div>
+                <div class="flex justify-between items-center"><span>Next / Prev Drill</span> <kbd class="px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-md font-black shadow-sm text-slate-900 uppercase">D / A</kbd></div>
+                <div class="flex justify-between items-center"><span>Jump to Heading</span> <kbd class="px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-md font-black shadow-sm text-slate-900 uppercase">Shift + D/A</kbd></div>
+                <div class="flex justify-between items-center"><span>Speed Toggle</span> <kbd class="px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-md font-black shadow-sm text-slate-900 uppercase">1, 2, 3</kbd></div>
+                <div class="flex justify-between items-center"><span>Help Menu</span> <kbd class="px-3 py-1.5 bg-slate-100 border border-slate-300 rounded-md font-black shadow-sm text-slate-900 uppercase">?</kbd></div>
+            </div>
+            <button onclick="toggleHelp()" class="w-full mt-12 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs">Dismiss</button>
+        </div>
+    </div>
+
+    <div id="editor-ui" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-5xl h-[85vh] rounded-[3rem] shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-8 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-xl uppercase italic">Agile Markup Input</h3>
+                <button onclick="toggleEditor()" class="p-2 text-slate-400">✕</button>
+            </div>
+            <div class="flex-1 p-8">
+                <textarea id="raw-input" class="w-full h-full p-8 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs outline-none focus:ring-2 focus:ring-blue-500 custom-scroll shadow-inner"></textarea>
+            </div>
+            <div class="p-8 border-t bg-white flex justify-end gap-3">
+                <button onclick="toggleEditor()" class="px-8 py-3 font-bold text-slate-400">Discard</button>
+                <button onclick="applyContent()" class="px-14 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-200">Re-Sync System</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_MD = `# Stage 1: The Foundations\n## Section 1.1: Common Greetings\n### Set A: Basic Greeting\n[es] Hola, ¿cómo estás hoy? | [en] Hello, how are you today?\n[es] Muy bien, gracias. ¿Y tú? | [en] Very well, thank you. And you?\n[es] Me llamo Juan y soy de Madrid. | [en] My name is Juan and I am from Madrid.\n\n### Set B: Asking for a Cafe\n[es] Busco un café cerca de aquí. | [en] I am looking for a cafe near here.\n[es] ¿Sirven café con leche? | [en] Do you serve coffee with milk?`;
+
+        const State = {
+            mode: 'drill', speed: 1.0, pause: 2, layout: 'side-by-side', dir: 'en-es',
+            isPlaying: false, index: -1, segments: [], voices: { es: null, en: null },
+            autoPause: false
+        };
+
+        const $ = (id) => document.getElementById(id);
+        const synth = window.speechSynthesis;
+        let audioTimer = null;
+
+        async function bootstrap() {
+            try {
+                const syncVoices = () => {
+                    const v = synth.getVoices();
+                    const esSel = $('voice-es'), enSel = $('voice-en');
+                    if (esSel && enSel) {
+                        esSel.innerHTML = v.filter(x => x.lang.startsWith('es')).map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+                        enSel.innerHTML = v.filter(x => x.lang.startsWith('en')).map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+                        const prefs = JSON.parse(localStorage.getItem('agile_v3_prefs') || '{}');
+                        State.voices.es = v.find(x => x.name === prefs.vES) || v.find(x => x.lang.startsWith('es'));
+                        State.voices.en = v.find(x => x.name === prefs.vEN) || v.find(x => x.lang.startsWith('en'));
+                        esSel.value = State.voices.es?.name || '';
+                        enSel.value = State.voices.en?.name || '';
+                    }
+                };
+                synth.onvoiceschanged = syncVoices;
+                syncVoices();
+
+                const savedMd = localStorage.getItem('agile_v3_md') || DEFAULT_MD;
+                if ($('raw-input')) $('raw-input').value = savedMd;
+                parse(savedMd);
+
+                updateMode(State.mode);
+                updateSpeed(State.speed);
+                updatePause(State.pause);
+                setLayout(State.layout);
+                syncDirUI();
+                syncAutoPauseUI();
+                
+                const lastIdx = localStorage.getItem('agile_v3_idx');
+                if (lastIdx) { State.index = parseInt(lastIdx); highlight(State.index); }
+            } catch (err) { console.error("System Boot Error:", err); }
+        }
+
+        function clean(str) { return str.replace(/\[es\]|\[en\]/gi, '').trim(); }
+
+        function parse(md) {
+            const lines = md.split('\n'), segs = [], toc = [];
+            let crumbs = { stage: "", section: "", set: "" };
+            lines.forEach((l) => {
+                const trimmed = l.trim(), h = trimmed.match(/^(#{1,3})\s+(.*)/);
+                if (h) {
+                    const lvl = h[1].length, title = h[2].trim();
+                    toc.push({ lvl, title, lineIdx: lines.indexOf(l) });
+                    if (lvl === 1) crumbs.stage = title;
+                    if (lvl === 2) crumbs.section = title;
+                    if (lvl === 3) crumbs.set = title;
+                } else if (trimmed.includes('|')) {
+                    const parts = trimmed.split('|'), es = clean(parts[0]), enRaw = clean(parts[1]), pMatch = enRaw.match(/(.*)\[pause:(\d+)\]/i);
+                    segs.push({
+                        es, en: pMatch ? pMatch[1].trim() : enRaw,
+                        p: pMatch ? parseInt(pMatch[2]) : null,
+                        crumbs: { ...crumbs },
+                        headingLineIdx: toc.length > 0 ? toc[toc.length-1].lineIdx : -1
+                    });
+                }
+            });
+            State.segments = segs;
+            const target = $('render-target');
+            if (!target) return;
+            let contentHTML = "", sIdx = 0;
+            lines.forEach((l, lIdx) => {
+                const h = l.trim().match(/^(#{1,3})\s+(.*)/);
+                if (h) {
+                    const lvl = h[1].length, title = h[2].trim();
+                    const classes = ['text-xl font-black mt-12 mb-4 border-b pb-2 border-slate-100 uppercase italic', 'text-lg font-bold mt-8 mb-2 text-slate-700', 'text-[9px] font-black mt-6 mb-1 text-blue-500 uppercase tracking-widest'];
+                    contentHTML += `<div class="px-6 ${classes[lvl-1]}">${title}</div>`;
+                } else if (l.trim().includes('|')) {
+                    const s = segs[sIdx];
+                    contentHTML += `<div id="row-${sIdx}" onclick="select(${sIdx})" class="row-hover border-b border-slate-50 group transition-colors cursor-pointer"><div class="seg-grid px-6 py-2.5"><div class="seg-es text-sm md:text-base font-medium leading-relaxed flex items-start gap-4"><div class="mt-1 w-4 h-4 flex items-center justify-center opacity-0 group-[.active-row]:opacity-100 text-blue-600"><svg class="w-full h-full" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><span class="flex-1">${s.es}</span></div><div class="seg-en text-xs md:text-sm text-slate-400 font-medium leading-relaxed">${s.en}</div></div></div>`;
+                    sIdx++;
+                }
+            });
+            target.innerHTML = contentHTML;
+            const tocNav = $('toc-nav');
+            if (tocNav) tocNav.innerHTML = toc.map(t => `<button onclick="jumpTo('${t.title}')" class="w-full text-left px-3 py-2 rounded text-[9px] font-black hover:bg-white transition-all ${t.lvl === 1 ? 'text-slate-900 mt-4 border-t border-slate-100' : 'text-slate-400 pl-4'}">${t.title.toUpperCase()}</button>`).join('');
+        }
+
+        function setLayout(l) {
+            State.layout = l;
+            const target = $('render-target');
+            if (target) target.className = `max-w-6xl mx-auto py-2 layout-${l}`;
+            ['side', 'over', 'plain'].forEach(id => {
+                const b = $(`lay-${id}`);
+                if (b) b.classList.toggle('bg-white/20', l.startsWith(id));
+            });
+        }
+
+        function updateMode(m) {
+            State.mode = m;
+            const f = $('btn-flow'), d = $('btn-drill');
+            if (f) f.className = `px-3 py-0.5 text-[9px] font-bold rounded ${m === 'flow' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400'}`;
+            if (d) d.className = `px-3 py-0.5 text-[9px] font-bold rounded ${m === 'drill' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400'}`;
+        }
+
+        function updateSpeed(s) {
+            State.speed = s;
+            [0.8, 1.0, 1.2].forEach(v => {
+                const b = $(`spd-${v.toFixed(1)}`);
+                if (b) b.className = `w-7 h-5 text-[9px] font-bold rounded ${s === v ? 'bg-slate-900 text-white' : 'text-slate-400'}`;
+            });
+        }
+
+        function updatePause(p) {
+            State.pause = p;
+            [0, 1, 2, 3].forEach(v => {
+                const b = $(`ps-${v}`);
+                if (b) b.className = `w-7 h-5 text-[9px] font-bold rounded ${p === v ? 'bg-slate-900 text-white' : 'text-slate-400'}`;
+            });
+        }
+
+        function toggleAutoPause() {
+            State.autoPause = !State.autoPause;
+            syncAutoPauseUI();
+        }
+
+        function syncAutoPauseUI() {
+            const b = $('btn-auto-pause');
+            if (b) {
+                b.innerText = `AUTO-PAUSE: ${State.autoPause ? 'ON' : 'OFF'}`;
+                b.classList.toggle('bg-blue-600', State.autoPause);
+                b.classList.toggle('text-white', State.autoPause);
+            }
+        }
+
+        function toggleDirection() { State.dir = State.dir === 'en-es' ? 'es-en' : 'en-es'; syncDirUI(); }
+        function syncDirUI() { const b = $('btn-dir'); if (b) b.innerText = State.dir.toUpperCase().replace('-', ' ➔ '); }
+        function toggleSidebar() { const s = $('sidebar'); if (s) s.classList.toggle('-translate-x-full'); }
+        function toggleEditor() { const e = $('editor-ui'); if (e) e.classList.toggle('hidden'); }
+        function toggleHelp() { const h = $('help-modal'); if (h) h.classList.toggle('hidden'); }
+        function toggleVoices() { const v = $('voice-modal'); if (v) v.classList.toggle('hidden'); }
+
+        function saveVoices() {
+            const esN = $('voice-es').value, enN = $('voice-en').value;
+            const v = synth.getVoices();
+            State.voices.es = v.find(x => x.name === esN);
+            State.voices.en = v.find(x => x.name === enN);
+            localStorage.setItem('agile_v3_prefs', JSON.stringify({ vES: esN, vEN: enN }));
+            toggleVoices();
+        }
+
+        function applyContent() {
+            const val = $('raw-input').value;
+            localStorage.setItem('agile_v3_md', val);
+            parse(val);
+            toggleEditor();
+        }
+
+        function select(i) { stop(); State.index = i; highlight(i); localStorage.setItem('agile_v3_idx', i); }
+        function jumpTo(title) {
+            const el = Array.from(document.querySelectorAll('#render-target div')).find(e => e.innerText === title);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function handlePlayToggle() { if (State.isPlaying) stop(); else play(); }
+        function stop() {
+            State.isPlaying = false; synth.cancel(); clearTimeout(audioTimer);
+            const p = $('icon-play'), ps = $('icon-pause');
+            if (p) p.classList.remove('hidden');
+            if (ps) ps.classList.add('hidden');
+            if ($('ui-status')) $('ui-status').innerText = "PAUSED";
+        }
+
+        function play() {
+            if (State.segments.length === 0) return;
+            if (State.index === -1) State.index = 0;
+            State.isPlaying = true;
+            const p = $('icon-play'), ps = $('icon-pause');
+            if (p) p.classList.add('hidden');
+            if (ps) ps.classList.remove('hidden');
+            run();
+        }
+
+        async function run() {
+            if (!State.isPlaying || State.index >= State.segments.length) { stop(); return; }
+            const s = State.segments[State.index];
+            highlight(State.index);
+            const stat = $('ui-status');
+            if (State.mode === 'flow') {
+                if (stat) stat.innerText = "SHADOWING (ES)";
+                await talk(s.es, 'es');
+                if (State.autoPause) { stop(); return; }
+                if (State.pause > 0) await wait(850 * State.pause);
+                changeSegment(1);
+            } else {
+                const [from, to] = State.dir.split('-');
+                if (stat) stat.innerText = `PROMPT (${from.toUpperCase()})`;
+                await talk(s[from], from);
+                if (State.pause > 0) {
+                    if (stat) stat.innerText = "WAITING";
+                    const base = [0, 800, 2200, 5000][State.pause];
+                    const pTime = s.p ? s.p * 1000 : (base + (s[to].split(' ').length * 480));
+                    await wait(pTime);
+                }
+                if (!State.isPlaying) return;
+                if (stat) stat.innerText = `REVEAL (${to.toUpperCase()})`;
+                await talk(s[to], to);
+                if (State.autoPause) { stop(); return; }
+                await wait(1800);
+                changeSegment(1);
+            }
+        }
+
+        function talk(txt, lang) {
+            return new Promise(res => {
+                if (!State.isPlaying) return res();
+                const u = new SpeechSynthesisUtterance(txt);
+                u.voice = State.voices[lang];
+                u.rate = State.speed;
+                u.onend = res;
+                u.onerror = res;
+                synth.speak(u);
+            });
+        }
+
+        function wait(ms) { return new Promise(res => timer = setTimeout(res, ms)); }
+
+        function highlight(i) {
+            document.querySelectorAll('.active-row').forEach(el => el.classList.remove('active-row'));
+            const row = $(`row-${i}`);
+            if (row) { row.classList.add('active-row'); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            const seg = State.segments[i];
+            const bread = $('sys-breadcrumb');
+            if (bread) bread.innerText = `${seg.crumbs.stage} › ${seg.crumbs.section} › ${seg.crumbs.set}`;
+            const prog = $('ui-progress-bar');
+            if (prog) prog.style.width = `${((i+1)/State.segments.length)*100}%`;
+        }
+
+        function changeSegment(dir) {
+            const next = State.index + dir;
+            if (next >= 0 && next < State.segments.length) {
+                State.index = next;
+                localStorage.setItem('agile_v3_idx', next);
+                if (State.isPlaying) run();
+                else highlight(next);
+            } else { stop(); }
+        }
+
+        function jumpToNextHeading() {
+            if (State.index === -1) return;
+            const currentHIdx = State.segments[State.index].headingLineIdx;
+            const nextSeg = State.segments.find((s, i) => i > State.index && s.headingLineIdx !== currentHIdx);
+            if (nextSeg) select(State.segments.indexOf(nextSeg));
+        }
+
+        function jumpToPrevHeading() {
+            if (State.index === -1) return;
+            const currentHIdx = State.segments[State.index].headingLineIdx;
+            // Find the last segment of the previous heading
+            const prevHeadings = State.segments.filter((s, i) => i < State.index && s.headingLineIdx !== currentHIdx);
+            if (prevHeadings.length === 0) {
+                // If no previous different heading, jump to the start of current heading if not already there
+                const firstOfCurrent = State.segments.findIndex(s => s.headingLineIdx === currentHIdx);
+                if (State.index > firstOfCurrent) select(firstOfCurrent);
+                return;
+            }
+            const targetHIdx = prevHeadings[prevHeadings.length - 1].headingLineIdx;
+            const firstOfTarget = State.segments.findIndex(s => s.headingLineIdx === targetHIdx);
+            select(firstOfTarget);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+            const key = e.key.toLowerCase();
+            const code = e.code;
+            const shift = e.shiftKey;
+            
+            if (key === 'w' || code === 'Space') { e.preventDefault(); handlePlayToggle(); }
+            if (key === 'q') { e.preventDefault(); toggleAutoPause(); }
+            if (key === 's' || code === 'ArrowDown') { e.preventDefault(); if (State.index !== -1) { stop(); play(); } }
+            
+            if (shift && (key === 'd' || code === 'ArrowRight')) { e.preventDefault(); jumpToNextHeading(); return; }
+            if (shift && (key === 'a' || code === 'ArrowLeft')) { e.preventDefault(); jumpToPrevHeading(); return; }
+
+            if (key === 'd' || code === 'ArrowRight') { e.preventDefault(); changeSegment(1); }
+            if (key === 'a' || code === 'ArrowLeft') { e.preventDefault(); changeSegment(-1); }
+            
+            if (e.key === '1') updateSpeed(0.8);
+            if (e.key === '2') updateSpeed(1.0);
+            if (e.key === '3') updateSpeed(1.2);
+            if (e.key === '?') toggleHelp();
+        });
+
+        setTimeout(bootstrap, 800);
+    </script>
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agile Mirroring Reader v2.5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root { --base-font-size: 14px; }
+        body { font-family: 'Inter', sans-serif; font-size: var(--base-font-size); -webkit-tap-highlight-color: transparent; }
+        
+        .active-row { background-color: rgba(37, 99, 235, 0.1) !important; border-left: 3px solid #2563eb !important; }
+        .row-hover:hover { background-color: rgba(0,0,0,0.02); }
+        
+        /* Layout Modes */
+        .layout-side-by-side .seg-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; align-items: start; }
+        .layout-over-under .seg-grid { display: flex; flex-direction: column; gap: 0.1rem; }
+        .layout-plain .seg-en { display: none; }
+        
+        /* Heading Looping Visuals */
+        .marked-heading { color: #2563eb !important; background-color: rgba(37, 99, 235, 0.05); border-radius: 0.25rem; }
+        .marked-heading::after { content: ' ↻'; font-size: 0.8em; margin-left: 0.5rem; opacity: 0.6; }
+
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .active-row .seg-es { color: #2563eb; font-weight: 700; }
+        .ap-indicator.active { background-color: #22c55e; color: white; border-color: #16a34a; }
+
+        #sidebar { transition: transform 0.2s ease-in-out; }
+        .sidebar-hidden #sidebar { transform: translateX(-100%); }
+        .sidebar-hidden main { margin-left: 0; }
+    </style>
+</head>
+<script>
+    const DEFAULT_MD = `# Stage 1: The Foundations\n## Section 1.1: Common Greetings\n### Set A: Basic Greeting\n[es] Hola, ¿cómo estás hoy? | [en] Hello, how are you today?\n[es] Muy bien, gracias. ¿Y tú? | [en] Very well, thank you. And you?\n[es] Me llamo Juan y soy de Madrid. | [en] My name is Juan and I am from Madrid.\n\n### Set B: Asking for a Cafe\n[es] Busco un café cerca de aquí. | [en] I am looking for a cafe near here.\n[es] ¿Sirven café con leche? | [en] Do you serve coffee with milk?`;
+</script>
+<body class="bg-white text-slate-900 h-[100dvh] flex flex-col overflow-hidden">
+
+    <!-- Compact Status Header -->
+    <header class="bg-slate-900 text-white px-3 py-1.5 flex items-center justify-between z-40 border-b border-white/10 shadow-md">
+        <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="p-1.5 hover:bg-white/10 rounded transition-colors" title="Toggle Sidebar (T)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+            </button>
+            <h1 class="font-black text-[10px] tracking-widest leading-none uppercase italic text-blue-400">Agile Reader <span class="text-white opacity-40">v2.5</span></h1>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+            <!-- Layout Toggles -->
+            <div class="hidden md:flex bg-white/5 rounded p-0.5 border border-white/10 mr-1">
+                <button onclick="setLayout('side-by-side')" id="lay-side" class="p-1 rounded hover:bg-white/10"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h8v14H3V5zm10 0h8v14h-8V5z"/></svg></button>
+                <button onclick="setLayout('over-under')" id="lay-over" class="p-1 rounded hover:bg-white/10"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h18v6H3V5zm0 8h18v6H3v-6z"/></svg></button>
+                <button onclick="setLayout('plain')" id="lay-plain" class="p-1 rounded hover:bg-white/10"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h18v2H3V5zm0 4h18v2H3V9zm0 4h18v2H3v-2zm0 4h18v2H3v-2z"/></svg></button>
+            </div>
+
+            <button onclick="toggleModal('settings-modal')" class="p-1.5 hover:bg-white/10 rounded transition-colors" title="Settings">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
+            <button onclick="toggleEditor()" class="p-1.5 hover:bg-white/10 rounded transition-colors" title="Edit Content">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+            <button onclick="toggleModal('help-modal')" class="p-1.5 hover:bg-blue-600 rounded transition-colors" title="Help (?)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative" id="app-shell">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="absolute inset-y-0 left-0 w-64 bg-slate-50 border-r border-slate-200 overflow-y-auto z-30 custom-scroll">
+            <div class="p-4">
+                <h2 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-200 pb-2 italic">Course Tree</h2>
+                <nav id="toc-nav" class="space-y-0.5"></nav>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main id="main-content" class="flex-1 flex flex-col relative bg-white overflow-hidden">
+            <!-- Parameter Toolbar -->
+            <div class="bg-slate-50 border-b border-slate-200 px-4 py-1 flex items-center justify-between gap-4 overflow-x-auto no-scrollbar">
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center bg-white border border-slate-200 rounded p-0.5 shadow-sm">
+                        <select id="seq-selector" onchange="updateSequenceMode()" class="bg-transparent text-[9px] font-bold outline-none px-2 py-0.5 cursor-pointer">
+                            <option value="es-only">ES ONLY</option>
+                            <option value="en-only">EN ONLY</option>
+                            <option value="en-es">EN ➔ ES</option>
+                            <option value="es-en">ES ➔ EN</option>
+                        </select>
+                    </div>
+                    <button onclick="toggleAutoPause()" id="btn-auto-pause" class="ap-indicator px-3 py-1 border rounded text-[9px] font-black transition-all bg-white border-slate-200" title="Auto-Pause (Q)">AP</button>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded p-0.5 shadow-sm">
+                        <button onclick="updateSpeed(1)" id="spd-1" class="w-7 h-5 text-[9px] font-bold rounded">S</button>
+                        <button onclick="updateSpeed(2)" id="spd-2" class="w-7 h-5 text-[9px] font-bold rounded">N</button>
+                        <button onclick="updateSpeed(3)" id="spd-3" class="w-7 h-5 text-[9px] font-bold rounded">F</button>
+                    </div>
+                    <div class="flex items-center gap-1 bg-white border border-slate-200 rounded p-0.5 shadow-sm">
+                        <button onclick="updatePause(0)" id="ps-0" class="w-7 h-5 text-[9px] font-bold rounded">0</button>
+                        <button onclick="updatePause(1)" id="ps-1" class="w-7 h-5 text-[9px] font-bold rounded">S</button>
+                        <button onclick="updatePause(2)" id="ps-2" class="w-7 h-5 text-[9px] font-bold rounded">M</button>
+                        <button onclick="updatePause(3)" id="ps-3" class="w-7 h-5 text-[9px] font-bold rounded">L</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- The Content Script -->
+            <div id="scroll-container" class="flex-1 overflow-y-auto custom-scroll scroll-smooth pb-40">
+                <div id="render-target" class="max-w-6xl mx-auto py-2 layout-side-by-side"></div>
+            </div>
+
+            <!-- HUD Control Bar -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-sm px-4">
+                <div class="bg-slate-900 rounded-full shadow-2xl p-2.5 flex items-center gap-3 border border-white/10 pointer-events-auto backdrop-blur-md">
+                    <button onclick="changeSegment(-1)" class="w-10 h-10 rounded-full text-white/50 hover:text-white flex items-center justify-center transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    </button>
+                    <button onclick="handlePlayToggle()" id="main-play-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:bg-blue-500 active:scale-95 transition-all">
+                        <svg id="icon-play" class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg id="icon-pause" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    <button onclick="changeSegment(1)" class="w-10 h-10 rounded-full text-white/50 hover:text-white flex items-center justify-center transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+                    </button>
+                    <div class="flex-1 pr-4 border-l border-white/10 ml-2">
+                        <div class="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                            <div id="ui-progress-bar" class="h-full bg-blue-500 w-0 transition-all"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Unified Settings Modal -->
+    <div id="settings-modal" class="modal-overlay fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6 hidden">
+        <div class="bg-white w-full max-w-xl rounded-[2rem] shadow-2xl overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-xl uppercase italic">Engine Settings</h3>
+                <button onclick="toggleModal('settings-modal')" class="text-slate-400 p-2">✕</button>
+            </div>
+            <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto custom-scroll">
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">Voices</h4>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 block mb-1">Spanish (ES)</label>
+                        <select id="voice-es" class="w-full p-2 bg-slate-50 border rounded text-xs"></select>
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-bold text-slate-400 block mb-1">English (EN)</label>
+                        <select id="voice-en" class="w-full p-2 bg-slate-50 border rounded text-xs"></select>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">Speed Values</h4>
+                    <div class="flex gap-2">
+                        <input type="number" id="val-spd-1" step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Slow">
+                        <input type="number" id="val-spd-2" step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Natural">
+                        <input type="number" id="val-spd-3" step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Fast">
+                    </div>
+                    <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">Pause Multipliers</h4>
+                    <div class="flex gap-2">
+                        <input type="number" id="val-ps-1" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Short">
+                        <input type="number" id="val-ps-2" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Medium">
+                        <input type="number" id="val-ps-3" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Long">
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t bg-slate-50 flex justify-end gap-3">
+                <button onclick="saveAdvancedSettings()" class="px-10 py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-blue-200">Apply & Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal-overlay fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6 hidden">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl p-10 text-center">
+            <h3 class="font-black text-2xl mb-8 uppercase italic">Ergonomics</h3>
+            <div class="space-y-3 text-left text-[11px] font-bold text-slate-600">
+                <div class="flex justify-between"><span>Play / Pause</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">W / Space</kbd></div>
+                <div class="flex justify-between"><span>Repeat</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">S / ↓</kbd></div>
+                <div class="flex justify-between"><span>Next / Prev</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">D / A</kbd></div>
+                <div class="flex justify-between"><span>Jump Heading</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">Shift + D/A</kbd></div>
+                <div class="flex justify-between"><span>Sidebar Toggle</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">T</kbd></div>
+                <div class="flex justify-between"><span>Auto-Pause (AP)</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">Q</kbd></div>
+            </div>
+            <button onclick="toggleModal('help-modal')" class="w-full mt-10 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs">Dismiss</button>
+        </div>
+    </div>
+
+    <!-- Editor -->
+    <div id="editor-ui" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-5xl h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-black text-xl uppercase italic tracking-widest">Agile Markup Input</h3>
+                <button onclick="toggleEditor()" class="p-2 text-slate-400">✕</button>
+            </div>
+            <div class="flex-1 p-6">
+                <textarea id="raw-input" class="w-full h-full p-6 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-xs outline-none focus:ring-2 focus:ring-blue-500 custom-scroll"></textarea>
+            </div>
+            <div class="p-8 border-t bg-white flex justify-end gap-3">
+                <button onclick="toggleEditor()" class="px-8 py-3 font-bold text-slate-400">Discard</button>
+                <button onclick="applyContent()" class="px-14 py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-200">Re-Sync Engine</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * v2.5 SYSTEM ENGINE
+         */
+        const State = {
+            seq: 'en-es', speedIdx: 2, pauseIdx: 2, layout: 'side-by-side',
+            isPlaying: false, index: -1, segments: [], voices: { es: null, en: null },
+            autoPause: false, loopRange: null, 
+            vals: { 
+                speed: [0.7, 1.0, 1.3],
+                pause: [800, 2200, 5000]
+            }
+        };
+
+        const $ = (id) => document.getElementById(id);
+        const synth = window.speechSynthesis;
+        let audioTimer = null;
+
+        async function bootstrap() {
+            try {
+                // Restore Config
+                const stored = JSON.parse(localStorage.getItem('agile_v25_config') || '{}');
+                Object.assign(State, stored);
+
+                // Populate UI from stored values
+                $('val-spd-1').value = State.vals.speed[0];
+                $('val-spd-2').value = State.vals.speed[1];
+                $('val-spd-3').value = State.vals.speed[2];
+                $('val-ps-1').value = State.vals.pause[0];
+                $('val-ps-2').value = State.vals.pause[1];
+                $('val-ps-3').value = State.vals.pause[2];
+
+                // Sync Voices
+                const syncV = () => {
+                    const v = synth.getVoices();
+                    $('voice-es').innerHTML = v.filter(x => x.lang.startsWith('es')).map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+                    $('voice-en').innerHTML = v.filter(x => x.lang.startsWith('en')).map(x => `<option value="${x.name}">${x.name}</option>`).join('');
+                    State.voices.es = v.find(x => x.name === State.voiceNames?.es) || v.find(x => x.lang.startsWith('es'));
+                    State.voices.en = v.find(x => x.name === State.voiceNames?.en) || v.find(x => x.lang.startsWith('en'));
+                    $('voice-es').value = State.voices.es?.name || '';
+                    $('voice-en').value = State.voices.en?.name || '';
+                };
+                synth.onvoiceschanged = syncV; syncV();
+
+                const savedMd = localStorage.getItem('agile_v25_md') || DEFAULT_MD;
+                $('raw-input').value = savedMd;
+                parse(savedMd);
+
+                // Initial UI Sync
+                $('seq-selector').value = State.seq;
+                updateSpeed(State.speedIdx);
+                updatePause(State.pauseIdx);
+                setLayout(State.layout);
+                syncAutoPauseUI();
+                
+                const lastIdx = localStorage.getItem('agile_v25_idx');
+                if (lastIdx) { State.index = parseInt(lastIdx); highlight(State.index); }
+
+            } catch (err) { console.error("Bootstrap Crash:", err); }
+        }
+
+        function clean(str) { return str.replace(/\[es\]|\[en\]/gi, '').trim(); }
+
+        function parse(md) {
+            const lines = md.split('\n'), segs = [], toc = [];
+            let currentHeadingLineIdx = -1;
+
+            lines.forEach((l, idx) => {
+                const trimmed = l.trim(), h = trimmed.match(/^(#{1,3})\s+(.*)/);
+                if (h) {
+                    currentHeadingLineIdx = idx;
+                    toc.push({ lvl: h[1].length, title: h[2].trim(), lineIdx: idx });
+                } else if (trimmed.includes('|')) {
+                    const parts = trimmed.split('|'), es = clean(parts[0]), enRaw = clean(parts[1]), pMatch = enRaw.match(/(.*)\[pause:(\d+)\]/i);
+                    segs.push({
+                        es, en: pMatch ? pMatch[1].trim() : enRaw,
+                        p: pMatch ? parseInt(pMatch[2]) : null,
+                        headingLineIdx: currentHeadingLineIdx
+                    });
+                }
+            });
+
+            State.segments = segs;
+            const target = $('render-target');
+            if (!target) return;
+
+            let html = "", sIdx = 0;
+            lines.forEach((l, lIdx) => {
+                const h = l.trim().match(/^(#{1,3})\s+(.*)/);
+                if (h) {
+                    const lvl = h[1].length, title = h[2].trim();
+                    const cls = ['text-base font-black mt-10 mb-2 border-b pb-1 uppercase italic text-slate-800', 'text-sm font-bold mt-6 mb-1 text-slate-600', 'text-[10px] font-black mt-4 mb-0 text-blue-500 uppercase tracking-widest'];
+                    html += `<div id="heading-${lIdx}" onclick="setLoopScope(${lIdx})" class="px-4 py-1 cursor-pointer hover:bg-slate-50 transition-all ${cls[lvl-1]}">${title}</div>`;
+                } else if (l.trim().includes('|')) {
+                    html += `<div id="row-${sIdx}" onclick="select(${sIdx})" class="row-hover border-b border-slate-50 group transition-colors cursor-pointer py-1.5 px-4"><div class="seg-grid"><div class="seg-es text-sm font-medium leading-tight">${segs[sIdx].es}</div><div class="seg-en text-[12px] text-slate-400 font-medium leading-tight">${segs[sIdx].en}</div></div></div>`;
+                    sIdx++;
+                }
+            });
+
+            target.innerHTML = html;
+            $('toc-nav').innerHTML = toc.map(t => `<button onclick="jumpToHeading('${t.title}')" class="w-full text-left px-3 py-1 rounded text-[9px] font-black hover:bg-white transition-all ${t.lvl === 1 ? 'text-slate-900 border-t mt-2 pt-2' : t.lvl === 2 ? 'text-slate-500' : 'text-slate-400 pl-4'}">${t.title.toUpperCase()}</button>`).join('');
+        }
+
+        // --- Controller UI ---
+        function setLayout(l) {
+            State.layout = l;
+            const target = $('render-target');
+            if (target) target.className = `max-w-6xl mx-auto py-2 layout-${l}`;
+            ['side', 'over', 'plain'].forEach(id => {
+                const b = $(`lay-${id}`);
+                if (b) b.classList.toggle('bg-white/20', l.startsWith(id));
+            });
+            saveState();
+        }
+
+        function updateSequenceMode() { State.seq = $('seq-selector').value; saveState(); }
+
+        function updateSpeed(idx) {
+            State.speedIdx = idx;
+            [1, 2, 3].forEach(v => {
+                const b = $(`spd-${v}`);
+                if (b) b.className = `w-7 h-5 text-[9px] font-bold rounded ${idx === v ? 'bg-slate-900 text-white' : 'text-slate-400'}`;
+            });
+            saveState();
+        }
+
+        function updatePause(idx) {
+            State.pauseIdx = idx;
+            [0, 1, 2, 3].forEach(v => {
+                const b = $(`ps-${v}`);
+                if (b) b.className = `w-7 h-5 text-[9px] font-bold rounded ${idx === v ? 'bg-slate-900 text-white' : 'text-slate-400'}`;
+            });
+            saveState();
+        }
+
+        function toggleAutoPause() { State.autoPause = !State.autoPause; syncAutoPauseUI(); saveState(); }
+        function syncAutoPauseUI() { const b = $('btn-auto-pause'); if (b) b.classList.toggle('active', State.autoPause); }
+
+        function setLoopScope(lineIdx) {
+            const h = $(`heading-${lineIdx}`);
+            if (State.loopRange && State.loopRange.id === lineIdx) {
+                State.loopRange = null;
+                h.classList.remove('marked-heading');
+            } else {
+                document.querySelectorAll('.marked-heading').forEach(x => x.classList.remove('marked-heading'));
+                h.classList.add('marked-heading');
+                
+                // Find all segments under this heading or its children
+                const start = State.segments.findIndex(s => s.headingLineIdx === lineIdx);
+                if (start === -1) return;
+                
+                // Find end: next heading of same or higher level
+                const targetLvl = parseInt(h.className.includes('text-base') ? 1 : h.className.includes('text-sm') ? 2 : 3);
+                const nextHeaderLine = Array.from(document.querySelectorAll('[id^="heading-"]'))
+                    .map(el => ({ idx: parseInt(el.id.split('-')[1]), lvl: el.className.includes('text-base') ? 1 : el.className.includes('text-sm') ? 2 : 3 }))
+                    .find(x => x.idx > lineIdx && x.lvl <= targetLvl);
+
+                const end = nextHeaderLine 
+                    ? State.segments.findIndex(s => s.headingLineIdx === nextHeaderLine.idx) - 1 
+                    : State.segments.length - 1;
+
+                State.loopRange = { id: lineIdx, start, end: end === -2 ? State.segments.length - 1 : end };
+                select(start);
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('agile_v25_config', JSON.stringify({
+                seq: State.seq, speedIdx: State.speedIdx, pauseIdx: State.pauseIdx,
+                layout: State.layout, autoPause: State.autoPause,
+                voiceNames: { es: $('voice-es').value, en: $('voice-en').value },
+                vals: State.vals
+            }));
+        }
+
+        function saveAdvancedSettings() {
+            State.vals.speed = [parseFloat($('val-spd-1').value), parseFloat($('val-spd-2').value), parseFloat($('val-spd-3').value)];
+            State.vals.pause = [parseInt($('val-ps-1').value), parseInt($('val-ps-2').value), parseInt($('val-ps-3').value)];
+            saveState();
+            toggleModal('settings-modal');
+        }
+
+        // --- Modals & Sidebar ---
+        function toggleSidebar() { document.body.classList.toggle('sidebar-hidden'); }
+        function toggleModal(id) { $(id).classList.toggle('hidden'); }
+        function toggleEditor() { $('editor-ui').classList.toggle('hidden'); }
+        
+        // Close modals on Esc or Backdrop click
+        window.addEventListener('keydown', e => { if(e.key === 'Escape') document.querySelectorAll('.modal-overlay:not(.hidden), #editor-ui:not(.hidden)').forEach(el => el.classList.add('hidden')); });
+        window.addEventListener('click', e => { if(e.target.classList.contains('modal-overlay')) e.target.classList.add('hidden'); });
+
+        function applyContent() {
+            const val = $('raw-input').value;
+            localStorage.setItem('agile_v25_md', val);
+            parse(val);
+            toggleEditor();
+        }
+
+        function select(i) { 
+            stop(); 
+            State.index = i; 
+            highlight(i); 
+            localStorage.setItem('agile_v25_idx', i); 
+            if (!State.isPlaying) play();
+        }
+        
+        function jumpToHeading(title) {
+            const el = Array.from(document.querySelectorAll('#render-target div')).find(e => e.innerText === title);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // --- Playback Engine ---
+        function handlePlayToggle() { if (State.isPlaying) stop(); else play(); }
+        function stop() {
+            State.isPlaying = false; synth.cancel(); clearTimeout(audioTimer);
+            $('icon-play').classList.remove('hidden');
+            $('icon-pause').classList.add('hidden');
+        }
+
+        function play() {
+            if (State.segments.length === 0) return;
+            if (State.index === -1) State.index = 0;
+            State.isPlaying = true;
+            $('icon-play').classList.add('hidden');
+            $('icon-pause').classList.remove('hidden');
+            run();
+        }
+
+        async function run() {
+            if (!State.isPlaying || State.index >= State.segments.length) { stop(); return; }
+            const s = State.segments[State.index];
+            highlight(State.index);
+
+            const plan = {
+                'es-only': [ {type: 'speak', lang: 'es'} ],
+                'en-only': [ {type: 'speak', lang: 'en'} ],
+                'en-es': [ {type: 'speak', lang: 'en'}, {type: 'wait'}, {type: 'speak', lang: 'es'} ],
+                'es-en': [ {type: 'speak', lang: 'es'}, {type: 'wait'}, {type: 'speak', lang: 'en'} ]
+            }[State.seq];
+
+            for (const step of plan) {
+                if (!State.isPlaying) return;
+                if (step.type === 'speak') {
+                    await talk(s[step.lang], step.lang);
+                } else if (step.type === 'wait' && State.pauseIdx > 0) {
+                    const base = State.vals.pause[State.pauseIdx - 1];
+                    const targetLang = plan[plan.length-1].lang;
+                    const pTime = s.p ? s.p * 1000 : (base + (s[targetLang].split(' ').length * 480));
+                    await wait(pTime);
+                }
+            }
+
+            // Loop Range Check
+            if (State.loopRange && State.index === State.loopRange.end) {
+                select(State.loopRange.start);
+                return;
+            }
+
+            if (State.autoPause) { stop(); return; }
+            if (State.pauseIdx > 0) await wait(1000);
+            changeSegment(1);
+        }
+
+        function talk(txt, lang) {
+            return new Promise(res => {
+                if (!State.isPlaying) return res();
+                const u = new SpeechSynthesisUtterance(txt);
+                u.voice = State.voices[lang];
+                u.rate = State.vals.speed[State.speedIdx-1];
+                u.onend = res;
+                u.onerror = res;
+                synth.speak(u);
+            });
+        }
+
+        function wait(ms) { return new Promise(res => audioTimer = setTimeout(res, ms)); }
+
+        function highlight(i) {
+            document.querySelectorAll('.active-row').forEach(el => el.classList.remove('active-row'));
+            const row = $(`row-${i}`);
+            if (row) { row.classList.add('active-row'); row.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+            $('ui-progress-bar').style.width = `${((i+1)/State.segments.length)*100}%`;
+        }
+
+        function changeSegment(dir) {
+            const next = State.index + dir;
+            if (next >= 0 && next < State.segments.length) {
+                State.index = next;
+                localStorage.setItem('agile_v25_idx', next);
+                if (State.isPlaying) run(); else highlight(next);
+            } else stop();
+        }
+
+        function jumpHeading(dir) {
+            if (State.index === -1) return;
+            const currentH = State.segments[State.index].headingLineIdx;
+            if (dir > 0) {
+                const n = State.segments.find((s, i) => i > State.index && s.headingLineIdx !== currentH);
+                if (n) select(State.segments.indexOf(n));
+            } else {
+                const prev = State.segments.filter((s, i) => i < State.index && s.headingLineIdx !== currentH);
+                if (prev.length === 0) {
+                    const start = State.segments.findIndex(s => s.headingLineIdx === currentH);
+                    if (State.index > start) select(start);
+                } else {
+                    const lastH = prev[prev.length-1].headingLineIdx;
+                    select(State.segments.findIndex(s => s.headingLineIdx === lastH));
+                }
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+            const key = e.key.toLowerCase(), code = e.code, shift = e.shiftKey;
+            
+            if (key === 'w' || code === 'Space') { e.preventDefault(); handlePlayToggle(); }
+            if (key === 'q') { e.preventDefault(); toggleAutoPause(); }
+            if (key === 't') { e.preventDefault(); toggleSidebar(); }
+            if (key === 's' || code === 'ArrowDown') { e.preventDefault(); if (State.index !== -1) select(State.index); }
+            
+            if (shift && (key === 'd' || code === 'ArrowRight')) { e.preventDefault(); jumpHeading(1); return; }
+            if (shift && (key === 'a' || code === 'ArrowLeft')) { e.preventDefault(); jumpHeading(-1); return; }
+
+            if (key === 'd' || code === 'ArrowRight') { e.preventDefault(); changeSegment(1); }
+            if (key === 'a' || code === 'ArrowLeft') { e.preventDefault(); changeSegment(-1); }
+            
+            if (e.key === '1') updateSpeed(1);
+            if (e.key === '2') updateSpeed(2);
+            if (e.key === '3') updateSpeed(3);
+            if (e.key === '?') toggleModal('help-modal');
+        });
+
+        window.addEventListener('DOMContentLoaded', () => setTimeout(bootstrap, 800));
+    </script>
+</body>
+</html>
