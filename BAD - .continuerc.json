@@ -1,0 +1,17 @@
+{
+  "agentOptions": {
+    "allowAutoApprove": true,
+    "verifiedTools": [
+      "edit_file",
+      "create_new_file",
+      "list_directory",
+      "run_terminal_command",
+      "view_diff",
+      "read_file",
+      "read_currently_open_file",
+      "ls",
+      "multi_edit",
+      "grep_search" 
+    ]
+  }
+}
