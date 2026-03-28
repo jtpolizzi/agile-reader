@@ -82,9 +82,22 @@
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("open-editor", openEditor);
+
+    const handleSaved = (e: CustomEvent) => {
+      const savedDoc = e.detail as AgileDocumentModel;
+      // If the currently active doc was the one saved, re-parse it
+      if (activeDoc && activeDoc.id === savedDoc.id) {
+        segments = MarkdownParser.parse(savedDoc.rawContent);
+        engineStore.setSegments(segments);
+        // Note: engineStore.currentIndex is reactive, so it stays the same
+      }
+    };
+    window.addEventListener("document-saved" as any, handleSaved);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("open-editor", openEditor);
+      window.removeEventListener("document-saved" as any, handleSaved);
     };
   });
 
@@ -152,7 +165,17 @@
       style="--reader-font-size: {uiStore.fontSize}px"
     >
       {#if uiStore.currentView === "library"}
-        <LibraryView onSelect={loadDocument} />
+        <LibraryView 
+          onSelect={loadDocument} 
+          onEdit={(doc) => {
+            editorModal.loadDoc(doc);
+            uiStore.openModal("editor");
+          }}
+          onNew={() => {
+            editorModal.loadDoc();
+            uiStore.openModal("editor");
+          }}
+        />
       {:else if activeDoc}
         <ReaderView {segments} />
         <PlaybackHUD />

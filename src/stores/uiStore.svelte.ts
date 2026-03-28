@@ -12,7 +12,7 @@
   public pauseIdx = $state(2);
 
   public speedValues = $state([0.7, 1.0, 1.3]);
-  public pauseValues = $state([800, 2200, 5000]);
+  public pauseValues = $state([400, 2500, 4500]);
 
   public voiceNames = $state({ es: "", en: "" });
 
@@ -89,6 +89,9 @@
     this.layoutMode = p.layout;
     this.autoPause = p.autoPause;
     this.fontSize = p.fontSize;
+    if (p.voiceNames) {
+      this.voiceNames = { ...p.voiceNames };
+    }
   }
 }
 

@@ -43,6 +43,12 @@ export class EngineStore {
     }
   }
 
+  public async selectAndPlay(idx: number) {
+    this.stop();
+    this.currentIndex = idx;
+    await this.play();
+  }
+
   public stop() {
     this.executionId++;
     this.isPlaying = false;
@@ -100,7 +106,7 @@ export class EngineStore {
         // Dynamic pause based on word count (heuristic from legacy)
         const targetLang = plan[plan.length - 1].lang as "es" | "en";
         const wordCount = s[targetLang]?.split(" ").length || 0;
-        const dynamicPause = basePause + (wordCount * 480);
+        const dynamicPause = basePause + (wordCount * 250);
         
         await this.engine.wait(manualPause || dynamicPause);
       }
@@ -115,10 +121,10 @@ export class EngineStore {
       return;
     }
 
-    // Small buffer between segments
-    if (uiStore.pauseIdx > 0) {
-      await this.engine.wait(1000);
-    }
+    // // Small buffer between segments
+    // if (uiStore.pauseIdx > 0) {
+    //   await this.engine.wait(500);
+    // }
 
     if (currentLock === this.executionId) {
       this.next();

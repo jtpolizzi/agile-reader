@@ -13,6 +13,8 @@ export class AudioEngine {
   private synth = window.speechSynthesis;
   private audioTimer: number | null = null;
   private executionId = 0;
+  private heartbeat: any = null;
+  private safetyTimeout: any = null;
 
   constructor(
     public config: AudioEngineConfig,
@@ -28,6 +30,9 @@ export class AudioEngine {
     this.isPlaying = false;
     this.isHalted = false;
     
+    if (this.heartbeat) clearInterval(this.heartbeat);
+    if (this.safetyTimeout) clearTimeout(this.safetyTimeout);
+    
     // HACK: If the engine is paused, cancel() often fails to clear the queue.
     // We resume first to ensure the cancel command is processed.
     if (this.synth.paused) this.synth.resume();
@@ -41,6 +46,9 @@ export class AudioEngine {
    */
   public pause(): void {
     this.synth.pause();
+    if (this.heartbeat) clearInterval(this.heartbeat);
+    if (this.safetyTimeout) clearTimeout(this.safetyTimeout);
+
     // HACK: Some browsers (like Chrome on certain OSs) require a tiny delay 
     // and a second pause call to actually stop the audio buffer immediately.
     if (this.synth.speaking && !this.synth.paused) {
@@ -74,7 +82,8 @@ export class AudioEngine {
       const finish = () => {
         if (!resolved) {
           resolved = true;
-          if (heartbeat) clearInterval(heartbeat);
+          if (this.heartbeat) clearInterval(this.heartbeat);
+          if (this.safetyTimeout) clearTimeout(this.safetyTimeout);
           resolve();
         }
       };
@@ -85,7 +94,8 @@ export class AudioEngine {
       // HACK: "The 15-second bug". Chrome's speech engine often times out 
       // and stops firing events after 15s. Periodically pausing and 
       // resuming keeps the connection alive.
-      const heartbeat = setInterval(() => {
+      if (this.heartbeat) clearInterval(this.heartbeat);
+      this.heartbeat = setInterval(() => {
         if (this.synth.speaking && !this.synth.paused) {
           this.synth.pause();
           this.synth.resume();
@@ -95,8 +105,14 @@ export class AudioEngine {
       // HACK: Safety timeout. If the browser fails to fire 'onend' or 'onerror'
       // (a frequent occurrence), this ensures the app doesn't hang forever.
       const wordCount = text.split(' ').length;
-      const timeout = Math.max(10000, wordCount * 2000); 
-      setTimeout(finish, timeout);
+      const timeoutDuration = Math.max(10000, wordCount * 2000); 
+      if (this.safetyTimeout) clearTimeout(this.safetyTimeout);
+      this.safetyTimeout = setTimeout(() => {
+        // Only trigger if we aren't paused
+        if (!this.synth.paused) {
+          finish();
+        }
+      }, timeoutDuration);
 
       this.synth.speak(utterance);
     });

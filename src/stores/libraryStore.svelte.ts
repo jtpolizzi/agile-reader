@@ -5,6 +5,14 @@ export class LibraryStore {
   public documents = $state<AgileDocumentModel[]>([]);
   private repo = new LocalStorageRepository();
 
+  public allTags = $derived.by(() => {
+    const tags = new Set<string>();
+    this.documents.forEach(doc => {
+      doc.tags.forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags).sort();
+  });
+
   constructor() {
     this.loadAll();
   }
@@ -16,6 +24,9 @@ export class LibraryStore {
   public async save(doc: AgileDocumentModel) {
     await this.repo.save(doc);
     await this.loadAll();
+    
+    // Dispatch event to inform other components that a document was saved
+    window.dispatchEvent(new CustomEvent('document-saved', { detail: doc }));
   }
 
   public async delete(id: string) {

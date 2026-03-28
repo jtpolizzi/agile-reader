@@ -60,8 +60,7 @@
           onkeydown={(e) => { if (e.key === 'Enter') console.log('select heading', idx); }}
           class="seg-grid px-4 py-1 cursor-pointer transition-all hover:bg-slate-50 rounded group {engineStore.currentIndex === idx ? 'marked-heading' : ''}"
           onclick={() => {
-            engineStore.setIndex(idx);
-            engineStore.togglePlay();
+            engineStore.selectAndPlay(idx);
           }}
         >
           <div class="seg-es heading-content-wrap {getHeadingClass(seg.level)}">
@@ -74,11 +73,10 @@
           id="seg-{idx}" 
           role="button"
           tabindex="0"
-          onkeydown={(e) => { if (e.key === 'Enter') { engineStore.setIndex(idx); engineStore.togglePlay(); } }}
+          onkeydown={(e) => { if (e.key === 'Enter') { engineStore.selectAndPlay(idx); } }}
           class="row-hover border-b border-slate-50 group transition-colors cursor-pointer py-1.5 px-4 {engineStore.currentIndex === idx ? 'active-row' : ''}"
           onclick={() => {
-            engineStore.setIndex(idx);
-            engineStore.togglePlay();
+            engineStore.selectAndPlay(idx);
           }}
         >
           <div class="seg-grid">
