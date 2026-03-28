@@ -26,6 +26,16 @@
     }
   }
 
+  $effect(() => {
+    if (uiStore.activeModal) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") uiStore.closeModal();
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  });
+
   function save() {
     const t = title.trim() || 'Untitled Doc';
     const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
@@ -57,8 +67,12 @@
 </script>
 
 {#if uiStore.activeModal === 'editor'}
-  <div class="modal-overlay">
-    <div class="bg-white w-full max-w-5xl h-[85vh] rounded-[3rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto">
+  <div 
+    class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6"
+    onclick={(e) => { if (e.target === e.currentTarget) uiStore.closeModal(); }}
+    role="presentation"
+  >
+    <div class="bg-white w-full max-w-5xl h-[85vh] rounded-[3rem] shadow-2xl flex flex-col overflow-hidden pointer-events-auto" onclick={(e) => e.stopPropagation()} role="presentation">
       
       <div class="p-6 border-b flex justify-between items-center bg-slate-50 shrink-0">
         <div class="flex-1 flex gap-4 mr-4">

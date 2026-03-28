@@ -9,6 +9,12 @@
 
   let newPresetName = $state("");
 
+  $effect(() => {
+    if (uiStore.currentPresetName) {
+      newPresetName = uiStore.currentPresetName;
+    }
+  });
+
   onMount(() => {
     const synth = window.speechSynthesis;
     const syncV = () => {
@@ -49,11 +55,24 @@
     delete uiStore.presets[name];
     if (uiStore.currentPresetName === name) uiStore.currentPresetName = "";
   }
+  $effect(() => {
+    if (uiStore.activeModal) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") uiStore.closeModal();
+      };
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  });
 </script>
 
 {#if uiStore.activeModal === 'settings'}
-<div class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6">
-  <div class="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden">
+<div 
+  class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6"
+  onclick={(e) => { if (e.target === e.currentTarget) uiStore.closeModal(); }}
+  role="presentation"
+>
+  <div class="bg-white w-full max-w-2xl rounded-[2rem] shadow-2xl overflow-hidden" onclick={(e) => e.stopPropagation()} role="presentation">
     <div class="p-6 border-b flex justify-between items-center bg-slate-50">
       <h3 class="font-black text-xl uppercase italic text-slate-800">Engine Settings</h3>
       <button onclick={() => uiStore.closeModal()} class="text-slate-400 p-2">✕</button>
@@ -67,7 +86,7 @@
             type="text" 
             bind:value={newPresetName}
             placeholder="Preset Name" 
-            class="flex-1 p-2 bg-slate-50 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-100 uppercase"
+            class="flex-1 p-2 bg-slate-50 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-100"
           >
           <button onclick={saveNewPreset} class="px-4 py-2 bg-slate-900 text-white rounded text-[10px] font-black">SAVE</button>
         </div>
@@ -77,7 +96,7 @@
             <div class="flex items-center justify-between p-2 bg-slate-50 rounded text-[9px] font-bold group">
               <button 
                 onclick={() => uiStore.loadPreset(name)}
-                class="uppercase truncate pr-2 flex-1 text-left"
+                class="truncate pr-2 flex-1 text-left"
               >
                 {name}
               </button>

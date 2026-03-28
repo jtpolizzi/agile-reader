@@ -10,6 +10,7 @@
   import Sidebar from "./components/shared/Sidebar.svelte";
   import SettingsModal from "./components/shared/SettingsModal.svelte";
   import HelpModal from "./components/shared/HelpModal.svelte";
+  import EditorModal from "./components/shared/EditorModal.svelte";
   import { AgileDocumentModel } from "./core/models/AgileDocument";
   import { onMount } from "svelte";
 
@@ -17,6 +18,7 @@
 
   let activeDoc = $state<AgileDocumentModel | null>(null);
   let segments = $state<Segment[]>([]);
+  let editorModal: any = $state();
 
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -62,7 +64,6 @@
         e.preventDefault();
         if (shift) {
           const prevSlice = segments.slice(0, engineStore.currentIndex);
-          const lastHeadingIdx = -1;
           for (let i = prevSlice.length - 1; i >= 0; i--) {
             if (prevSlice[i].type === "heading") {
               engineStore.setIndex(i);
@@ -80,7 +81,11 @@
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("open-editor", openEditor);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("open-editor", openEditor);
+    };
   });
 
   function loadDocument(doc: AgileDocumentModel) {
@@ -90,6 +95,15 @@
     engineStore.setSegments(segments);
     engineStore.setIndex(doc.lastIndex || 0);
     uiStore.currentView = "reader";
+  }
+
+  function openEditor() {
+    if (activeDoc) {
+      editorModal.loadDoc(activeDoc);
+    } else {
+      editorModal.loadDoc();
+    }
+    uiStore.openModal("editor");
   }
 
   $effect(() => {
@@ -148,4 +162,5 @@
 
   <SettingsModal />
   <HelpModal />
+  <EditorModal bind:this={editorModal} />
 </div>
