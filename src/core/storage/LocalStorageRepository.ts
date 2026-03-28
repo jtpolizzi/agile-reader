@@ -1,4 +1,4 @@
-import { type AgileDocumentModel } from '../models/AgileDocument';
+import { AgileDocumentModel } from '../models/AgileDocument';
 import { type IDocumentRepository } from './IDocumentRepository';
 
 const STORAGE_KEY = 'agile_reader_docs';

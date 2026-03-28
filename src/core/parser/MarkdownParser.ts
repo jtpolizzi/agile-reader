@@ -29,15 +29,15 @@ export class MarkdownParser {
 
       // Handle Drill Segments (Rows containing '|')
       if (trimmed.includes('|')) {
-        const [esRaw, enRaw] = trimmed.split('|');
-        const cleanedEs = this.clean(esRaw);
+        const [esRaw, enRaw] = trimmed.split('|').map(s => this.clean(s));
         
         // Handle Pause Metadata: [pause:123]
         const pauseMatch = enRaw.match(/(.*)\[pause:(\d+)\]/i);
-        const en = pauseMatch ? pauseMatch[1].trim() : this.clean(enRaw);
+        const es = esRaw;
+        const en = pauseMatch ? pauseMatch[1].trim() : enRaw;
         const pause = pauseMatch ? parseInt(pauseMatch[2], 10) : null;
 
-        segments.push(new DrillSegment(cleanedEs, en, pause, lastHeadingIdx));
+        segments.push(new DrillSegment(es, en, pause, lastHeadingIdx));
       }
     });
 
