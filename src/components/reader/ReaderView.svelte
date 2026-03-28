@@ -6,10 +6,19 @@
   let { segments = [] }: { segments: Segment[] } = $props();
 
   function getHeadingClass(level: number) {
-    if (level === 1) return "text-base font-black mt-8 mb-2 border-b pb-1 uppercase italic text-slate-800";
-    if (level === 2) return "text-sm font-bold mt-5 mb-1 text-slate-600";
-    return "text-[10px] font-black mt-3 mb-0 text-blue-500 uppercase tracking-widest";
+    if (level === 1) return "reader-h1";
+    if (level === 2) return "reader-h2";
+    return "reader-h3";
   }
+
+  $effect(() => {
+    if (engineStore.currentIndex !== -1) {
+      const el = document.getElementById(`seg-${engineStore.currentIndex}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  });
 </script>
 
 <div class="bg-slate-50 border-b border-slate-200 px-4 py-1 flex items-center justify-between gap-4 shrink-0 overflow-x-auto no-scrollbar">
@@ -50,7 +59,10 @@
           tabindex="0"
           onkeydown={(e) => { if (e.key === 'Enter') console.log('select heading', idx); }}
           class="seg-grid px-4 py-1 cursor-pointer transition-all hover:bg-slate-50 rounded group {engineStore.currentIndex === idx ? 'marked-heading' : ''}"
-          onclick={() => console.log('select heading', idx)}
+          onclick={() => {
+            engineStore.setIndex(idx);
+            engineStore.togglePlay();
+          }}
         >
           <div class="seg-es heading-content-wrap {getHeadingClass(seg.level)}">
             <span>{seg.es}</span>
@@ -62,9 +74,12 @@
           id="seg-{idx}" 
           role="button"
           tabindex="0"
-          onkeydown={(e) => { if (e.key === 'Enter') console.log('select', idx); }}
+          onkeydown={(e) => { if (e.key === 'Enter') { engineStore.setIndex(idx); engineStore.togglePlay(); } }}
           class="row-hover border-b border-slate-50 group transition-colors cursor-pointer py-1.5 px-4 {engineStore.currentIndex === idx ? 'active-row' : ''}"
-          onclick={() => console.log('select', idx)}
+          onclick={() => {
+            engineStore.setIndex(idx);
+            engineStore.togglePlay();
+          }}
         >
           <div class="seg-grid">
             <div class="seg-es">{seg.es}</div>

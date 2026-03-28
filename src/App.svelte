@@ -8,14 +8,87 @@
   import PlaybackHUD from "./components/hud/PlaybackHUD.svelte";
   import Header from "./components/shared/Header.svelte";
   import Sidebar from "./components/shared/Sidebar.svelte";
+  import SettingsModal from "./components/shared/SettingsModal.svelte";
+  import HelpModal from "./components/shared/HelpModal.svelte";
   import { AgileDocumentModel } from "./core/models/AgileDocument";
+  import { onMount } from "svelte";
+
+  import { engineStore } from "./stores/engineStore.svelte";
 
   let activeDoc = $state<AgileDocumentModel | null>(null);
   let segments = $state<Segment[]>([]);
 
+  onMount(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if in input/textarea
+      const target = e.target as HTMLElement;
+      if (target?.tagName === "TEXTAREA" || target?.tagName === "INPUT") return;
+      
+      const key = e.key.toLowerCase();
+      const code = e.code;
+      const shift = e.shiftKey;
+
+      if (uiStore.currentView !== "reader") return;
+
+      if (key === "w" || code === "Space") {
+        e.preventDefault();
+        engineStore.togglePlay();
+      }
+      if (key === "q") {
+        e.preventDefault();
+        uiStore.autoPause = !uiStore.autoPause;
+      }
+      if (key === "t") {
+        e.preventDefault();
+        uiStore.toggleSidebar();
+      }
+      if (key === "s" || code === "ArrowDown") {
+        e.preventDefault();
+        if (engineStore.currentIndex !== -1) {
+          engineStore.stop();
+          engineStore.play();
+        }
+      }
+      if (key === "d" || code === "ArrowRight") {
+        e.preventDefault();
+        if (shift) {
+          const nextHeadingIdx = segments.findIndex((s, i) => i > engineStore.currentIndex && s.type === "heading");
+          if (nextHeadingIdx !== -1) engineStore.setIndex(nextHeadingIdx);
+        } else {
+          engineStore.next();
+        }
+      }
+      if (key === "a" || code === "ArrowLeft") {
+        e.preventDefault();
+        if (shift) {
+          const prevSlice = segments.slice(0, engineStore.currentIndex);
+          const lastHeadingIdx = -1;
+          for (let i = prevSlice.length - 1; i >= 0; i--) {
+            if (prevSlice[i].type === "heading") {
+              engineStore.setIndex(i);
+              break;
+            }
+          }
+        } else {
+          engineStore.prev();
+        }
+      }
+      if (key === "1") uiStore.speedIdx = 1;
+      if (key === "2") uiStore.speedIdx = 2;
+      if (key === "3") uiStore.speedIdx = 3;
+      if (key === "?") uiStore.openModal("help");
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
   function loadDocument(doc: AgileDocumentModel) {
     activeDoc = doc;
+    localStorage.setItem("agile_reader_last_doc_id", doc.id);
     segments = MarkdownParser.parse(doc.rawContent);
+    engineStore.setSegments(segments);
+    engineStore.setIndex(doc.lastIndex || 0);
     uiStore.currentView = "reader";
   }
 
@@ -32,6 +105,21 @@
         lastIndex: 0
       });
       libraryStore.save(seed);
+    } else {
+      // Restore last active document if we are in reader view
+      const lastDocId = localStorage.getItem("agile_reader_last_doc_id");
+      if (uiStore.currentView === "reader" && !activeDoc && lastDocId) {
+        const doc = libraryStore.documents.find(d => d.id === lastDocId);
+        if (doc) loadDocument(doc);
+      }
+    }
+  });
+
+  // Auto-save document index when it changes
+  $effect(() => {
+    if (activeDoc && engineStore.currentIndex !== -1) {
+      activeDoc.lastIndex = engineStore.currentIndex;
+      libraryStore.save(activeDoc);
     }
   });
 </script>
@@ -44,7 +132,11 @@
       <Sidebar {segments} />
     {/if}
 
-    <main id="main-content" class="flex-1 flex flex-col relative bg-white overflow-hidden">
+    <main 
+      id="main-content" 
+      class="flex-1 flex flex-col relative bg-white overflow-hidden" 
+      style="--reader-font-size: {uiStore.fontSize}px"
+    >
       {#if uiStore.currentView === "library"}
         <LibraryView onSelect={loadDocument} />
       {:else if activeDoc}
@@ -53,4 +145,7 @@
       {/if}
     </main>
   </div>
+
+  <SettingsModal />
+  <HelpModal />
 </div>
