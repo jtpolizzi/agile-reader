@@ -35,9 +35,9 @@
   .active-row .seg-es { color: #2563eb; font-weight: 700; }
   .active-row .seg-en { color: #334155; }
 
-  .reader-h1 { font-size: 1.2rem; font-weight: 900; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.25rem; text-transform: uppercase; font-style: italic; color: #1e293b; }
-  .reader-h2 { font-size: 1rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.25rem; color: #475569; }
-  .reader-h3 { font-size: 0.8rem; font-weight: 900; margin-top: 0.75rem; margin-bottom: 0; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.05em; }
+  .reader-h1 { font-size: 1.2em; font-weight: 900; margin-top: 1.5rem; margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.25rem; text-transform: uppercase; font-style: italic; color: #1e293b; }
+  .reader-h2 { font-size: 1em; font-weight: 700; margin-top: 1rem; margin-bottom: 0.25rem; color: #475569; }
+  .reader-h3 { font-size: 0.8em; font-weight: 900; margin-top: 0.75rem; margin-bottom: 0; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.05em; }
 
   #app-shell { 
     display: flex; 

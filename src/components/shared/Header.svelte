@@ -18,7 +18,7 @@
   <div class="flex items-center gap-2">
     {#if uiStore.currentView === "reader"}
       <div class="flex items-center bg-white/5 rounded p-0.5 border border-white/10">
-        <select bind:value={uiStore.currentPresetName} onchange={(e) => uiStore.loadPreset(e.currentTarget.value)} class="bg-transparent text-[9px] font-black outline-none px-2 py-0.5 cursor-pointer text-blue-300 uppercase">
+        <select bind:value={uiStore.currentPresetName} onchange={(e) => uiStore.loadPreset(e.currentTarget.value)} class="bg-transparent text-[9px] font-black outline-none px-2 py-0.5 cursor-pointer text-blue-300">
           <option value="">-- NO PRESET --</option>
           {#each Object.keys(uiStore.presets).sort() as name}
             <option value={name}>{name}</option>
