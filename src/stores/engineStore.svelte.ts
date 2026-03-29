@@ -77,31 +77,65 @@ export class EngineStore {
     }
     const synth = window.speechSynthesis;
     
-    this.status = "REFRESHING VOICES...";
+    this.status = "INITIATING HARD RESET...";
     this.availableVoices = [];
 
-    // THE "FORCE INITIALIZATION" UTTERANCE
-    const nudge = new SpeechSynthesisUtterance("init");
-    nudge.volume = 0;
-    synth.speak(nudge);
-    synth.cancel();
+    // TECHNIQUE 4: The "Real Speak" nudge. 
+    // Instead of immediate cancel, we wait for the 'start' event.
+    return new Promise<void>((resolve) => {
+      const nudge = new SpeechSynthesisUtterance(" ");
+      nudge.volume = 0.01; // Tiny but non-zero
+      nudge.onstart = () => {
+        this.status = "ENGINE STARTED. FETCHING...";
+        let attempts = 0;
+        const interval = setInterval(() => {
+          const voices = synth.getVoices();
+          attempts++;
+          this.status = `SCANNING (TRY ${attempts}/10): FOUND ${voices.length}...`;
+          
+          if (voices.length > 0) {
+            this.availableVoices = voices;
+            this.refreshVoices();
+            this.status = `SUCCESS: ${voices.length} VOICES`;
+            clearInterval(interval);
+            synth.cancel();
+            resolve();
+          }
+          if (attempts >= 10) {
+            this.status = "FAILED: VOICES STILL EMPTY";
+            clearInterval(interval);
+            synth.cancel();
+            resolve();
+          }
+        }, 300);
+      };
 
-    // RETRY LADDER WITH UI STATUS
-    for (let i = 0; i < 10; i++) {
-      const voices = synth.getVoices();
-      this.status = `SCANNING (TRY ${i + 1}/10): FOUND ${voices.length}...`;
+      nudge.onerror = (e) => {
+        this.status = `ENGINE ERROR: ${e.error}`;
+        resolve();
+      };
+
+      // If the engine is stuck, resume it
+      synth.resume();
+      synth.cancel(); // Clear queue
+      setTimeout(() => synth.speak(nudge), 100);
       
-      if (voices.length > 0) {
-        this.availableVoices = voices;
-        this.refreshVoices();
-        this.status = `SUCCESS: ${voices.length} VOICES LOADED`;
-        return;
-      }
-      
-      await new Promise(r => setTimeout(r, 200 * (i + 1)));
-    }
-    
-    this.status = "NO VOICES FOUND AFTER 10 TRIES";
+      // Safety timeout if onstart never fires
+      setTimeout(() => {
+        if (this.availableVoices.length === 0 && this.status.includes("INITIATING")) {
+          this.status = "ONSTART TIMEOUT - RETRYING SYNC...";
+          const voices = synth.getVoices();
+          if (voices.length > 0) {
+            this.availableVoices = voices;
+            this.refreshVoices();
+            this.status = `SUCCESS: ${voices.length} VOICES (LATE)`;
+          } else {
+            this.status = "STUCK: ENGINE DID NOT RESPOND";
+          }
+          resolve();
+        }
+      }, 3000);
+    });
   }
 
   public refreshVoices() {
