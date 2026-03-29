@@ -35,33 +35,79 @@ export class EngineStore {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
     const synth = window.speechSynthesis;
-    const update = () => {
+    
+    // Some mobile browsers need a "nudge" to load voices
+    const forceUpdate = () => {
       const voices = synth.getVoices();
+      console.log(`AudioEngine: Found ${voices.length} voices`);
       if (voices.length > 0) {
         this.availableVoices = voices;
-        // Don't auto-set voice names into uiStore here, 
-        // just make sure the engine has what it needs.
         this.refreshVoices();
       }
     };
 
-    if (synth.onvoiceschanged !== undefined) {
-      synth.onvoiceschanged = update;
-    }
-    update();
+    // Listen for the official event
+    synth.onvoiceschanged = forceUpdate;
 
-    // Backup: Chrome on Android sometimes needs a few tries
-    setTimeout(update, 100);
-    setTimeout(update, 1000);
+    // Aggressive polling for mobile (runs a few times then stops)
+    let attempts = 0;
+    const poll = setInterval(() => {
+      forceUpdate();
+      attempts++;
+      
+      // HACK: If voices are still empty, try "nudging" the synth engine 
+      // with a silent utterance (required by some Android browsers)
+      if (this.availableVoices.length === 0 && attempts % 2 === 0) {
+        const nudge = new SpeechSynthesisUtterance("");
+        nudge.volume = 0;
+        synth.speak(nudge);
+      }
+
+      if (attempts > 20 || this.availableVoices.length > 0) clearInterval(poll);
+    }, 500);
+
+    // Initial check
+    forceUpdate();
+  }
+
+  public async manualRefresh() {
+    if (typeof window !== "undefined") {
+      const synth = window.speechSynthesis;
+      
+      // HACK: On mobile, the list is often empty until the browser is nudged.
+      // We try several techniques in sequence.
+      
+      // 1. Silent utterance to "wake up" the engine
+      if (synth.getVoices().length === 0) {
+        const silent = new SpeechSynthesisUtterance(" ");
+        silent.volume = 0;
+        synth.speak(silent);
+        synth.cancel();
+      }
+
+      // 2. Wait and read voices
+      this.availableVoices = synth.getVoices();
+      
+      // 3. Fallback: On some Samsung/Android 15+ devices, the standard event 
+      // doesn't fire, but requesting the list again after a micro-task works.
+      await new Promise(r => setTimeout(r, 100));
+      this.availableVoices = synth.getVoices();
+      
+      this.refreshVoices();
+    }
   }
 
   public refreshVoices() {
     if (this.availableVoices.length === 0) return;
 
+    // Search patterns: 'es-' or 'spa' for Spanish, 'en-' or 'eng' for English
     const es = this.availableVoices.find(v => v.name === uiStore.voiceNames.es) || 
-               this.availableVoices.find(v => v.lang.startsWith("es")) || null;
+               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("es")) ||
+               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("spa")) || null;
+
     const en = this.availableVoices.find(v => v.name === uiStore.voiceNames.en) || 
-               this.availableVoices.find(v => v.lang.startsWith("en")) || null;
+               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("en")) ||
+               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("eng")) || null;
     
     this.engine.voices = { es, en };
 
