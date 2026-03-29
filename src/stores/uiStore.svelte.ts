@@ -47,11 +47,13 @@
       speedValues: this.speedValues,
       pauseValues: this.pauseValues,
       voiceNames: this.voiceNames,
+      voiceURIs: this.voiceURIs,
       presets: this.presets,
       currentPresetName: this.currentPresetName
     };
     localStorage.setItem("agile_reader_ui_state", JSON.stringify(state));
   }
+
 
   private loadState() {
     const saved = localStorage.getItem("agile_reader_ui_state");
@@ -90,10 +92,10 @@
     this.layoutMode = p.layout;
     this.autoPause = p.autoPause;
     this.fontSize = p.fontSize;
-    if (p.voiceNames) {
-      this.voiceNames = { ...p.voiceNames };
-    }
+    if (p.voiceNames) this.voiceNames = { ...p.voiceNames };
+    if (p.voiceURIs) this.voiceURIs = { ...p.voiceURIs };
   }
+
 }
 
 export const uiStore = new UIStore();

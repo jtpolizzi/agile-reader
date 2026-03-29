@@ -12,20 +12,26 @@
   let testOutput = $state("");
 
   async function checkAI() {
-    if (!('translation' in window)) {
-      aiStatus = "NOT SUPPORTED (Check chrome://flags for 'Translation API')";
+    // @ts-ignore
+    const ai = window.ai || window.translation;
+    if (!ai) {
+      aiStatus = "NOT SUPPORTED (Check chrome://flags)";
       return;
     }
     try {
       // @ts-ignore
-      const canTranslate = await window.translation.canTranslate({
+      const capabilities = await (ai.translator?.capabilities?.() || ai.canTranslate?.({
         sourceLanguage: 'es',
         targetLanguage: 'en',
-      });
-      if (canTranslate === 'no') {
-        aiStatus = "SUPPORTED BUT NO MODELS DOWNLOADED";
+      }));
+      
+      const status = capabilities?.available || capabilities;
+      if (status === 'no' || status === 'unavailable') {
+        aiStatus = "SUPPORTED BUT NO MODELS";
+      } else if (status === 'after-download' || status === 'readily') {
+        aiStatus = "READY (" + status.toUpperCase() + ")";
       } else {
-        aiStatus = "READY (MODELS " + canTranslate.toUpperCase() + ")";
+        aiStatus = "SUPPORTED (" + status + ")";
       }
     } catch (e) {
       aiStatus = "ERROR: " + (e as Error).message;
@@ -34,18 +40,31 @@
 
   async function runTranslationTest() {
     try {
-      testOutput = "Translating...";
       // @ts-ignore
-      const translator = await window.translation.createTranslator({
+      const ai = window.ai || window.translation;
+      if (!ai) throw new Error("Translation API not found");
+
+      testOutput = "Translating...";
+      
+      // Try multiple possible API signatures as this is very experimental
+      // @ts-ignore
+      const translator = await (ai.translator?.create?.({
         sourceLanguage: 'es',
         targetLanguage: 'en',
-      });
+      }) || ai.createTranslator?.({
+        sourceLanguage: 'es',
+        targetLanguage: 'en',
+      }));
+
+      if (!translator) throw new Error("Failed to create translator");
+      
       // @ts-ignore
       testOutput = await translator.translate(testInput);
     } catch (e) {
       testOutput = "FAILED: " + (e as Error).message;
     }
   }
+
 
   $effect(() => {
     if (uiStore.activeModal === "settings") {
@@ -79,11 +98,13 @@
       layout: uiStore.layoutMode,
       autoPause: uiStore.autoPause,
       fontSize: uiStore.fontSize,
-      voiceNames: { ...uiStore.voiceNames }
+      voiceNames: { ...uiStore.voiceNames },
+      voiceURIs: { ...uiStore.voiceURIs }
     };
     uiStore.currentPresetName = newPresetName;
     newPresetName = "";
   }
+
 
   function deletePreset(name: string) {
     delete uiStore.presets[name];
