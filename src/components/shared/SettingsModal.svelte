@@ -1,11 +1,9 @@
 <script lang="ts">
   import { uiStore } from "../../stores/uiStore.svelte";
   import { engineStore } from "../../stores/engineStore.svelte";
-  import { onMount } from "svelte";
 
-  let availableVoices = $state<SpeechSynthesisVoice[]>([]);
-  let esVoices = $derived(availableVoices.filter(v => v.lang.startsWith("es")));
-  let enVoices = $derived(availableVoices.filter(v => v.lang.startsWith("en")));
+  let esVoices = $derived(engineStore.availableVoices.filter(v => v.lang.startsWith("es") || v.lang.startsWith("ES")));
+  let enVoices = $derived(engineStore.availableVoices.filter(v => v.lang.startsWith("en") || v.lang.startsWith("EN")));
 
   let newPresetName = $state("");
 
@@ -15,26 +13,10 @@
     }
   });
 
-  onMount(() => {
-    const synth = window.speechSynthesis;
-    const syncV = () => {
-      availableVoices = synth.getVoices();
-      if (availableVoices.length > 0) {
-        // Match existing voice names if they exist
-        const es = availableVoices.find(v => v.name === uiStore.voiceNames.es) || esVoices[0];
-        const en = availableVoices.find(v => v.name === uiStore.voiceNames.en) || enVoices[0];
-        engineStore.updateVoices(es || null, en || null);
-      }
-    };
-    synth.onvoiceschanged = syncV;
-    syncV();
-  });
-
   function handleVoiceChange() {
-    const es = availableVoices.find(v => v.name === uiStore.voiceNames.es);
-    const en = availableVoices.find(v => v.name === uiStore.voiceNames.en);
-    engineStore.updateVoices(es || null, en || null);
+    engineStore.refreshVoices();
   }
+
 
   function saveNewPreset() {
     if (!newPresetName.trim()) return;

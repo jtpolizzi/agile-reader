@@ -75,6 +75,7 @@ export class AudioEngine {
       }
 
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang === "es" ? "es-ES" : "en-US"; 
       utterance.voice = this.voices[lang];
       utterance.rate = this.config.speed[speedIdx - 1] || 1.0;
       

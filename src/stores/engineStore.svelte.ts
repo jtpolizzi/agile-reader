@@ -16,6 +16,60 @@ export class EngineStore {
   public isHalted = $state(false);
   public currentIndex = $state(-1);
   public status = $state("Ready");
+  public availableVoices = $state<SpeechSynthesisVoice[]>([]);
+
+  constructor() {
+    this.initVoices();
+
+    // Re-sync voices when names change (e.g. from presets or settings)
+    $effect.root(() => {
+      $effect(() => {
+        uiStore.voiceNames.es;
+        uiStore.voiceNames.en;
+        this.refreshVoices();
+      });
+    });
+  }
+
+  private initVoices() {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const synth = window.speechSynthesis;
+    const update = () => {
+      const voices = synth.getVoices();
+      if (voices.length > 0) {
+        this.availableVoices = voices;
+        // Don't auto-set voice names into uiStore here, 
+        // just make sure the engine has what it needs.
+        this.refreshVoices();
+      }
+    };
+
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = update;
+    }
+    update();
+
+    // Backup: Chrome on Android sometimes needs a few tries
+    setTimeout(update, 100);
+    setTimeout(update, 1000);
+  }
+
+  public refreshVoices() {
+    if (this.availableVoices.length === 0) return;
+
+    const es = this.availableVoices.find(v => v.name === uiStore.voiceNames.es) || 
+               this.availableVoices.find(v => v.lang.startsWith("es")) || null;
+    const en = this.availableVoices.find(v => v.name === uiStore.voiceNames.en) || 
+               this.availableVoices.find(v => v.lang.startsWith("en")) || null;
+    
+    this.engine.voices = { es, en };
+
+    // Update uiStore names if they are empty but we found a default
+    if (!uiStore.voiceNames.es && es) uiStore.voiceNames.es = es.name;
+    if (!uiStore.voiceNames.en && en) uiStore.voiceNames.en = en.name;
+  }
+
 
   public setSegments(segs: Segment[]) {
     this.segments = segs;
