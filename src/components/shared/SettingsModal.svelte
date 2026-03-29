@@ -107,14 +107,19 @@
       
       <div class="space-y-6">
         <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">System Voices</h4>
-        <div class="mb-4 flex items-center justify-between">
-          <span class="text-[9px] font-bold text-slate-400 uppercase italic">Found: {engineStore.availableVoices.length} voices</span>
-          <button 
-            onclick={() => engineStore.manualRefresh()}
-            class="text-[9px] bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded font-bold"
-          >
-            REFRESH LIST
-          </button>
+        <div class="mb-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[9px] font-bold text-slate-400 uppercase italic">Found: {engineStore.availableVoices.length} voices</span>
+            <button 
+              onclick={() => engineStore.manualRefresh()}
+              class="text-[9px] bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded font-bold transition-colors"
+            >
+              REFRESH LIST
+            </button>
+          </div>
+          <div class="text-[8px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50/50 p-1 rounded-sm text-center">
+            {engineStore.status}
+          </div>
         </div>
         <div>
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">Spanish (ES)</label>

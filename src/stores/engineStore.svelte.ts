@@ -71,32 +71,37 @@ export class EngineStore {
   }
 
   public async manualRefresh() {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      this.status = "TTS NOT SUPPORTED";
+      return;
+    }
     const synth = window.speechSynthesis;
     
-    // TECHNIQUE 1: Simple fetch
-    let voices = synth.getVoices();
-    
-    // TECHNIQUE 2: The "Nudge" if empty
-    if (voices.length === 0) {
-      const nudge = new SpeechSynthesisUtterance(" ");
-      nudge.volume = 0;
-      nudge.rate = 10; // Fast as possible
-      synth.speak(nudge);
-      
-      // Wait a bit for the engine to initialize
-      for (let i = 0; i < 10; i++) {
-        await new Promise(r => setTimeout(r, 100));
-        voices = synth.getVoices();
-        if (voices.length > 0) break;
-      }
-      synth.cancel();
-    }
+    this.status = "REFRESHING VOICES...";
+    this.availableVoices = [];
 
-    if (voices.length > 0) {
-      this.availableVoices = voices;
-      this.refreshVoices();
+    // THE "FORCE INITIALIZATION" UTTERANCE
+    const nudge = new SpeechSynthesisUtterance("init");
+    nudge.volume = 0;
+    synth.speak(nudge);
+    synth.cancel();
+
+    // RETRY LADDER WITH UI STATUS
+    for (let i = 0; i < 10; i++) {
+      const voices = synth.getVoices();
+      this.status = `SCANNING (TRY ${i + 1}/10): FOUND ${voices.length}...`;
+      
+      if (voices.length > 0) {
+        this.availableVoices = voices;
+        this.refreshVoices();
+        this.status = `SUCCESS: ${voices.length} VOICES LOADED`;
+        return;
+      }
+      
+      await new Promise(r => setTimeout(r, 200 * (i + 1)));
     }
+    
+    this.status = "NO VOICES FOUND AFTER 10 TRIES";
   }
 
   public refreshVoices() {
