@@ -6,6 +6,7 @@
   let enVoices = $derived(engineStore.availableVoices.filter(v => v.lang.toLowerCase().startsWith("en") || v.lang.toLowerCase().startsWith("eng")));
 
   let newPresetName = $state("");
+  let showRawVoices = $state(false);
 
   $effect(() => {
     if (uiStore.currentView === "reader" || uiStore.activeModal === "settings") {
@@ -120,6 +121,22 @@
           <div class="text-[8px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50/50 p-1 rounded-sm text-center">
             {engineStore.status}
           </div>
+          <button 
+            onclick={() => showRawVoices = !showRawVoices}
+            class="w-full mt-1 text-[7px] text-slate-400 underline uppercase"
+          >
+            {showRawVoices ? 'Hide' : 'Show'} All {engineStore.availableVoices.length} Raw Voices
+          </button>
+          
+          {#if showRawVoices}
+            <div class="mt-2 p-2 bg-slate-900 text-white text-[7px] font-mono max-h-40 overflow-y-auto rounded custom-scroll">
+              {#each engineStore.availableVoices as v}
+                <div class="mb-1 border-b border-white/10 pb-1 uppercase">
+                  [{v.lang}] {v.name}
+                </div>
+              {/each}
+            </div>
+          {/if}
         </div>
         <div>
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">Spanish (ES)</label>
