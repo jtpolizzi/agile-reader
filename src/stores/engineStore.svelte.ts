@@ -71,28 +71,30 @@ export class EngineStore {
   }
 
   public async manualRefresh() {
-    if (typeof window !== "undefined") {
-      const synth = window.speechSynthesis;
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    const synth = window.speechSynthesis;
+    
+    // TECHNIQUE 1: Simple fetch
+    let voices = synth.getVoices();
+    
+    // TECHNIQUE 2: The "Nudge" if empty
+    if (voices.length === 0) {
+      const nudge = new SpeechSynthesisUtterance(" ");
+      nudge.volume = 0;
+      nudge.rate = 10; // Fast as possible
+      synth.speak(nudge);
       
-      // HACK: On mobile, the list is often empty until the browser is nudged.
-      // We try several techniques in sequence.
-      
-      // 1. Silent utterance to "wake up" the engine
-      if (synth.getVoices().length === 0) {
-        const silent = new SpeechSynthesisUtterance(" ");
-        silent.volume = 0;
-        synth.speak(silent);
-        synth.cancel();
+      // Wait a bit for the engine to initialize
+      for (let i = 0; i < 10; i++) {
+        await new Promise(r => setTimeout(r, 100));
+        voices = synth.getVoices();
+        if (voices.length > 0) break;
       }
+      synth.cancel();
+    }
 
-      // 2. Wait and read voices
-      this.availableVoices = synth.getVoices();
-      
-      // 3. Fallback: On some Samsung/Android 15+ devices, the standard event 
-      // doesn't fire, but requesting the list again after a micro-task works.
-      await new Promise(r => setTimeout(r, 100));
-      this.availableVoices = synth.getVoices();
-      
+    if (voices.length > 0) {
+      this.availableVoices = voices;
       this.refreshVoices();
     }
   }
