@@ -18,10 +18,10 @@
   });
 
   function handleVoiceChange() {
-    const es = engineStore.availableVoices.find(v => v.name === uiStore.voiceNames.es);
-    const en = engineStore.availableVoices.find(v => v.name === uiStore.voiceNames.en);
-    if (es) uiStore.voiceURIs.es = es.voiceURI;
-    if (en) uiStore.voiceURIs.en = en.voiceURI;
+    const es = engineStore.availableVoices.find(v => v.voiceURI === uiStore.voiceURIs.es);
+    const en = engineStore.availableVoices.find(v => v.voiceURI === uiStore.voiceURIs.en);
+    if (es) uiStore.voiceNames.es = es.name;
+    if (en) uiStore.voiceNames.en = en.name;
     engineStore.refreshVoices();
   }
 
@@ -146,23 +146,23 @@
         <div>
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">Spanish (ES)</label>
           <select 
-            bind:value={uiStore.voiceNames.es}
+            bind:value={uiStore.voiceURIs.es}
             onchange={handleVoiceChange}
             class="w-full p-2 bg-slate-50 border rounded text-xs mb-3 outline-none focus:ring-2 focus:ring-blue-100"
           >
             {#each esVoices as v}
-              <option value={v.name}>{v.name}</option>
+              <option value={v.voiceURI}>{v.name}</option>
             {/each}
           </select>
           
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">English (EN)</label>
           <select 
-            bind:value={uiStore.voiceNames.en}
+            bind:value={uiStore.voiceURIs.en}
             onchange={handleVoiceChange}
             class="w-full p-2 bg-slate-50 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-100"
           >
             {#each enVoices as v}
-              <option value={v.name}>{v.name}</option>
+              <option value={v.voiceURI}>{v.name}</option>
             {/each}
           </select>
         </div>
