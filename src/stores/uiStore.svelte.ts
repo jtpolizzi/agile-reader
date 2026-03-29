@@ -15,10 +15,11 @@
   public pauseValues = $state([400, 2500, 4500]);
 
   public voiceNames = $state({ es: "", en: "" });
+  public voiceURIs = $state({ es: "", en: "" });
 
   public presets: Record<string, any> = $state({
-    "Classic Shadow": { seq: "es-only", speedIdx: 2, pauseIdx: 0, layout: "side-by-side", autoPause: false, fontSize: 14, voiceNames: { es: "", en: "" } },
-    "Deep Drill": { seq: "en-es", speedIdx: 1, pauseIdx: 2, layout: "side-by-side", autoPause: true, fontSize: 14, voiceNames: { es: "", en: "" } }
+    "Classic Shadow": { seq: "es-only", speedIdx: 2, pauseIdx: 0, layout: "side-by-side", autoPause: false, fontSize: 14, voiceNames: { es: "", en: "" }, voiceURIs: { es: "", en: "" } },
+    "Deep Drill": { seq: "en-es", speedIdx: 1, pauseIdx: 2, layout: "side-by-side", autoPause: true, fontSize: 14, voiceNames: { es: "", en: "" }, voiceURIs: { es: "", en: "" } }
   });
   public currentPresetName = $state("");
 

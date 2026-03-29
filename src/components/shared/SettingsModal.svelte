@@ -18,8 +18,13 @@
   });
 
   function handleVoiceChange() {
+    const es = engineStore.availableVoices.find(v => v.name === uiStore.voiceNames.es);
+    const en = engineStore.availableVoices.find(v => v.name === uiStore.voiceNames.en);
+    if (es) uiStore.voiceURIs.es = es.voiceURI;
+    if (en) uiStore.voiceURIs.en = en.voiceURI;
     engineStore.refreshVoices();
   }
+
 
 
 

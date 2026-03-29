@@ -152,18 +152,24 @@ export class EngineStore {
       v.lang.toLowerCase().startsWith("eng") || 
       v.name.toLowerCase().includes("english");
 
-    const es = this.availableVoices.find(v => v.name === uiStore.voiceNames.es) || 
+    // Match by URI (unique) first, then Name, then Lang
+    const es = this.availableVoices.find(v => v.voiceURI === uiStore.voiceURIs.es) || 
+               this.availableVoices.find(v => v.name === uiStore.voiceNames.es) || 
                this.availableVoices.find(isEs) || null;
 
-    const en = this.availableVoices.find(v => v.name === uiStore.voiceNames.en) || 
+    const en = this.availableVoices.find(v => v.voiceURI === uiStore.voiceURIs.en) || 
+               this.availableVoices.find(v => v.name === uiStore.voiceNames.en) || 
                this.availableVoices.find(isEn) || null;
     
     this.engine.voices = { es, en };
 
-    // Update uiStore names if they are empty but we found a default
+    // Update uiStore names & URIs if they are empty but we found a default
     if (!uiStore.voiceNames.es && es) uiStore.voiceNames.es = es.name;
+    if (!uiStore.voiceURIs.es && es) uiStore.voiceURIs.es = es.voiceURI;
     if (!uiStore.voiceNames.en && en) uiStore.voiceNames.en = en.name;
+    if (!uiStore.voiceURIs.en && en) uiStore.voiceURIs.en = en.voiceURI;
   }
+
 
 
   public setSegments(segs: Segment[]) {
