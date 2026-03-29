@@ -71,71 +71,29 @@ export class EngineStore {
   }
 
   public async manualRefresh() {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      this.status = "TTS NOT SUPPORTED";
-      return;
-    }
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
     const synth = window.speechSynthesis;
     
-    this.status = "WAKING UP ENGINE...";
-    this.availableVoices = [];
-
-    return new Promise<void>((resolve) => {
-      // Some browsers (Edge) need a real word to trigger activation
-      const nudge = new SpeechSynthesisUtterance("Waking up");
-      nudge.volume = 0.001; 
-      
-      nudge.onstart = () => {
-        this.status = "ENGINE ACTIVE. SCANNING...";
-        let attempts = 0;
-        const interval = setInterval(() => {
-          const voices = synth.getVoices();
-          attempts++;
-          this.status = `SCANNING (TRY ${attempts}/10): ${voices.length} TOTAL`;
-          
-          if (voices.length > 0) {
-            this.availableVoices = voices;
-            this.refreshVoices();
-            this.status = `READY: ${voices.length} VOICES LOADED`;
-            clearInterval(interval);
-            synth.cancel();
-            resolve();
-          }
-          if (attempts >= 10) {
-            this.status = "SCAN COMPLETE (NO VOICES)";
-            clearInterval(interval);
-            synth.cancel();
-            resolve();
-          }
-        }, 400);
-      };
-
-      nudge.onerror = (e) => {
-        // If it's a 'not-allowed' error, it means we need a user click (which we have here)
-        this.status = `ENGINE ERROR: ${e.error}`;
-        resolve();
-      };
-
-      // Force resume and clear before speaking
-      synth.resume();
+    // Simple fetch
+    let voices = synth.getVoices();
+    
+    // Simple nudge if empty
+    if (voices.length === 0) {
+      const nudge = new SpeechSynthesisUtterance(" ");
+      nudge.volume = 0;
+      synth.speak(nudge);
       synth.cancel();
-      setTimeout(() => synth.speak(nudge), 50);
       
-      // Safety timeout
-      setTimeout(() => {
-        if (this.availableVoices.length === 0 && this.status.includes("WAKING")) {
-          const voices = synth.getVoices();
-          if (voices.length > 0) {
-            this.availableVoices = voices;
-            this.refreshVoices();
-            this.status = `READY: ${voices.length} VOICES (LATE SYNC)`;
-          } else {
-            this.status = "ENGINE STUCK - TRY REFRESHING PAGE";
-          }
-          resolve();
-        }
-      }, 4000);
-    });
+      // Short wait for sync
+      await new Promise(r => setTimeout(r, 100));
+      voices = synth.getVoices();
+    }
+
+    if (voices.length > 0) {
+      this.availableVoices = voices;
+      this.refreshVoices();
+      this.status = "Voices Ready";
+    }
   }
 
   public refreshVoices() {

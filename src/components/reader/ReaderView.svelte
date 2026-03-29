@@ -66,7 +66,7 @@
           <div class="seg-es heading-content-wrap {getHeadingClass(seg.level)}">
             <span>{seg.es}</span>
           </div>
-          <div class="seg-en {getHeadingClass(seg.level)} opacity-40 pl-4">{seg.en}</div>
+          <div class="seg-en {getHeadingClass(seg.level)} opacity-40">{seg.en}</div>
         </div>
       {:else}
         <div 
