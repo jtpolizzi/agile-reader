@@ -77,78 +77,86 @@ export class EngineStore {
     }
     const synth = window.speechSynthesis;
     
-    this.status = "INITIATING HARD RESET...";
+    this.status = "WAKING UP ENGINE...";
     this.availableVoices = [];
 
-    // TECHNIQUE 4: The "Real Speak" nudge. 
-    // Instead of immediate cancel, we wait for the 'start' event.
     return new Promise<void>((resolve) => {
-      const nudge = new SpeechSynthesisUtterance(" ");
-      nudge.volume = 0.01; // Tiny but non-zero
+      // Some browsers (Edge) need a real word to trigger activation
+      const nudge = new SpeechSynthesisUtterance("Waking up");
+      nudge.volume = 0.001; 
+      
       nudge.onstart = () => {
-        this.status = "ENGINE STARTED. FETCHING...";
+        this.status = "ENGINE ACTIVE. SCANNING...";
         let attempts = 0;
         const interval = setInterval(() => {
           const voices = synth.getVoices();
           attempts++;
-          this.status = `SCANNING (TRY ${attempts}/10): FOUND ${voices.length}...`;
+          this.status = `SCANNING (TRY ${attempts}/10): ${voices.length} TOTAL`;
           
           if (voices.length > 0) {
             this.availableVoices = voices;
             this.refreshVoices();
-            this.status = `SUCCESS: ${voices.length} VOICES`;
+            this.status = `READY: ${voices.length} VOICES LOADED`;
             clearInterval(interval);
             synth.cancel();
             resolve();
           }
           if (attempts >= 10) {
-            this.status = "FAILED: VOICES STILL EMPTY";
+            this.status = "SCAN COMPLETE (NO VOICES)";
             clearInterval(interval);
             synth.cancel();
             resolve();
           }
-        }, 300);
+        }, 400);
       };
 
       nudge.onerror = (e) => {
+        // If it's a 'not-allowed' error, it means we need a user click (which we have here)
         this.status = `ENGINE ERROR: ${e.error}`;
         resolve();
       };
 
-      // If the engine is stuck, resume it
+      // Force resume and clear before speaking
       synth.resume();
-      synth.cancel(); // Clear queue
-      setTimeout(() => synth.speak(nudge), 100);
+      synth.cancel();
+      setTimeout(() => synth.speak(nudge), 50);
       
-      // Safety timeout if onstart never fires
+      // Safety timeout
       setTimeout(() => {
-        if (this.availableVoices.length === 0 && this.status.includes("INITIATING")) {
-          this.status = "ONSTART TIMEOUT - RETRYING SYNC...";
+        if (this.availableVoices.length === 0 && this.status.includes("WAKING")) {
           const voices = synth.getVoices();
           if (voices.length > 0) {
             this.availableVoices = voices;
             this.refreshVoices();
-            this.status = `SUCCESS: ${voices.length} VOICES (LATE)`;
+            this.status = `READY: ${voices.length} VOICES (LATE SYNC)`;
           } else {
-            this.status = "STUCK: ENGINE DID NOT RESPOND";
+            this.status = "ENGINE STUCK - TRY REFRESHING PAGE";
           }
           resolve();
         }
-      }, 3000);
+      }, 4000);
     });
   }
 
   public refreshVoices() {
     if (this.availableVoices.length === 0) return;
 
-    // Search patterns: 'es-' or 'spa' for Spanish, 'en-' or 'eng' for English
+    // Search patterns: more inclusive for mobile browsers that label things oddly
+    const isEs = (v: SpeechSynthesisVoice) => 
+      v.lang.toLowerCase().startsWith("es") || 
+      v.lang.toLowerCase().startsWith("spa") || 
+      v.name.toLowerCase().includes("spanish");
+
+    const isEn = (v: SpeechSynthesisVoice) => 
+      v.lang.toLowerCase().startsWith("en") || 
+      v.lang.toLowerCase().startsWith("eng") || 
+      v.name.toLowerCase().includes("english");
+
     const es = this.availableVoices.find(v => v.name === uiStore.voiceNames.es) || 
-               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("es")) ||
-               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("spa")) || null;
+               this.availableVoices.find(isEs) || null;
 
     const en = this.availableVoices.find(v => v.name === uiStore.voiceNames.en) || 
-               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("en")) ||
-               this.availableVoices.find(v => v.lang.toLowerCase().startsWith("eng")) || null;
+               this.availableVoices.find(isEn) || null;
     
     this.engine.voices = { es, en };
 
