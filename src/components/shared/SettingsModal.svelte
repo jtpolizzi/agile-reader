@@ -7,8 +7,50 @@
 
   let newPresetName = $state("");
   let showRawVoices = $state(false);
+  let aiStatus = $state("Checking...");
+  let testInput = $state("Hola mundo");
+  let testOutput = $state("");
+
+  async function checkAI() {
+    if (!('translation' in window)) {
+      aiStatus = "NOT SUPPORTED (Check chrome://flags for 'Translation API')";
+      return;
+    }
+    try {
+      // @ts-ignore
+      const canTranslate = await window.translation.canTranslate({
+        sourceLanguage: 'es',
+        targetLanguage: 'en',
+      });
+      if (canTranslate === 'no') {
+        aiStatus = "SUPPORTED BUT NO MODELS DOWNLOADED";
+      } else {
+        aiStatus = "READY (MODELS " + canTranslate.toUpperCase() + ")";
+      }
+    } catch (e) {
+      aiStatus = "ERROR: " + (e as Error).message;
+    }
+  }
+
+  async function runTranslationTest() {
+    try {
+      testOutput = "Translating...";
+      // @ts-ignore
+      const translator = await window.translation.createTranslator({
+        sourceLanguage: 'es',
+        targetLanguage: 'en',
+      });
+      // @ts-ignore
+      testOutput = await translator.translate(testInput);
+    } catch (e) {
+      testOutput = "FAILED: " + (e as Error).message;
+    }
+  }
 
   $effect(() => {
+    if (uiStore.activeModal === "settings") {
+      checkAI();
+    }
     if (uiStore.currentView === "reader" || uiStore.activeModal === "settings") {
       engineStore.manualRefresh();
     }
@@ -143,6 +185,7 @@
             </div>
           {/if}
         </div>
+        
         <div>
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">Spanish (ES)</label>
           <select 
@@ -178,6 +221,46 @@
             <input type="number" bind:value={uiStore.pauseValues[0]} class="w-full p-2 bg-slate-50 border rounded text-xs" title="Short Buffer">
             <input type="number" bind:value={uiStore.pauseValues[1]} class="w-full p-2 bg-slate-50 border rounded text-xs" title="Medium Buffer">
             <input type="number" bind:value={uiStore.pauseValues[2]} class="w-full p-2 bg-slate-50 border rounded text-xs" title="Long Buffer">
+          </div>
+        </div>
+
+        <div class="pt-4 border-t">
+          <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest mb-3 italic">AI Translation (Experimental)</h4>
+          <div class="p-3 bg-slate-100 rounded-xl space-y-2 border border-slate-200 shadow-inner">
+            <div class="flex justify-between items-center">
+              <span class="text-[8px] font-black uppercase {aiStatus.startsWith('READY') ? 'text-green-600' : 'text-slate-400'}">{aiStatus}</span>
+              <button 
+                onclick={checkAI}
+                class="text-[7px] bg-white border px-2 py-0.5 rounded font-black shadow-sm"
+              >
+                RE-SCAN
+              </button>
+            </div>
+            
+            <div class="flex gap-1">
+              <input 
+                bind:value={testInput}
+                type="text" 
+                class="flex-1 text-[8px] p-1.5 border rounded-md"
+                placeholder="Text to translate..."
+              />
+              <button 
+                onclick={runTranslationTest}
+                class="bg-blue-600 text-white text-[8px] px-3 py-1 rounded-md font-black shadow-lg active:scale-95 transition-transform"
+              >
+                TEST
+              </button>
+            </div>
+            
+            {#if testOutput}
+              <div class="text-[9px] font-bold p-2 bg-white rounded border border-blue-100 text-blue-800 animate-in fade-in slide-in-from-top-1 duration-300">
+                {testOutput}
+              </div>
+            {/if}
+            
+            <p class="text-[7px] text-slate-400 font-medium leading-tight">
+              On-device AI. Requires <code class="bg-slate-200 px-1 rounded">chrome://flags/#translation-api</code> enabled.
+            </p>
           </div>
         </div>
       </div>
