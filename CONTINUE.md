@@ -56,6 +56,9 @@ The application is a modern **Single Page Application (SPA)** using **Svelte 5 (
 
 ## 5. Development Workflow & Rules
 
+### 🛑 ABSOLUTE RULE: Communication First
+If the user asks a question, **DO NOT GO OFF AND CODE... STOP AND ANSWER THE QUESTION**. Let the user decide what to do next. The user must be INVOLVED in the decisions. Do not code on the fly without explicit permission.
+
 ### Svelte 5 Runes Pattern
 Always use the `.svelte.ts` extension for reactive logic files.
 ```typescript

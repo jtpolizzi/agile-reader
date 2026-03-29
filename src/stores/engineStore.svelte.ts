@@ -217,7 +217,7 @@ export class EngineStore {
         const wordCount = s[targetLang]?.split(" ").length || 0;
         const dynamicPause = basePause + (wordCount * 250);
         
-        await this.engine.wait(step.pause || manualPause || dynamicPause);
+        await this.engine.wait(manualPause || dynamicPause);
       }
     }
 
@@ -244,8 +244,8 @@ export class EngineStore {
     switch (uiStore.sequenceMode) {
       case "es-only": return [{ type: "speak", lang: "es" }];
       case "en-only": return [{ type: "speak", lang: "en" }];
-      case "en-es": return [{ type: "speak", lang: "en" }, { type: "wait", pause: 400 }, { type: "speak", lang: "es" }];
-      case "es-en": return [{ type: "speak", lang: "es" }, { type: "wait", pause: 400 }, { type: "speak", lang: "en" }];
+      case "en-es": return [{ type: "speak", lang: "en" }, { type: "wait" }, { type: "speak", lang: "es" }];
+      case "es-en": return [{ type: "speak", lang: "es" }, { type: "wait" }, { type: "speak", lang: "en" }];
       default: return [{ type: "speak", lang: "es" }];
     }
   }
