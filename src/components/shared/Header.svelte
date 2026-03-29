@@ -12,7 +12,13 @@
     <button onclick={(e) => { e.preventDefault(); uiStore.currentView = "library"; }} class="p-2.5 hover:bg-white/10 rounded-lg transition-colors" title="Catalogue View (L)">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
     </button>
-    <h1 class="font-black text-[11px] tracking-widest leading-none uppercase italic text-blue-400 truncate hidden md:block">Agile Reader <span class="text-white/20 ml-1">v3.0</span></h1>
+    <h1 class="font-black text-[11px] tracking-widest leading-none uppercase italic text-blue-400 truncate hidden md:block">
+      {#if uiStore.currentView === "reader" && uiStore.activeDocTitle}
+        {uiStore.activeDocTitle}
+      {:else}
+        Agile Reader <span class="text-white/20 ml-1">v3.0</span>
+      {/if}
+    </h1>
   </div>
 
   <div class="flex items-center gap-3">

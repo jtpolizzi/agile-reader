@@ -1,4 +1,4 @@
-import { HeadingSegment, DrillSegment, type Segment } from '../models/Segment';
+import { HeadingSegment, TextSegment, type Segment } from '../models/Segment';
 
 export class MarkdownParser {
   /**
@@ -6,6 +6,7 @@ export class MarkdownParser {
    * Maintains the logic from the stable legacy system.
    */
   static parse(md: string): Segment[] {
+    if (!md) return [];
     const lines = md.split('\n');
     const segments: Segment[] = [];
     let lastHeadingIdx = -1;
@@ -29,7 +30,7 @@ export class MarkdownParser {
         return;
       }
 
-      // Handle Drill Segments (Rows containing '|')
+      // Handle Text Segments (Rows containing '|')
       if (trimmed.includes('|')) {
         const [esRaw, enRaw] = trimmed.split('|');
         const es = this.clean(esRaw || '');
@@ -40,7 +41,10 @@ export class MarkdownParser {
         const en = pauseMatch ? pauseMatch[1].trim() : en_with_pause;
         const pause = pauseMatch ? parseInt(pauseMatch[2], 10) : null;
 
-        segments.push(new DrillSegment(es, en, pause, lastHeadingIdx));
+        segments.push(new TextSegment(es, en, pause, lastHeadingIdx));
+      } else {
+        // Plain text lines are treated as ES-only TextSegments
+        segments.push(new TextSegment(trimmed, '', null, lastHeadingIdx));
       }
     });
 

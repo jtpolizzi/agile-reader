@@ -2,7 +2,7 @@ export interface AgileDocument {
   id: string;
   title: string;
   tags: string[];
-  rawContent: string;
+  rawContent?: string; // Optional because we lazy load it
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number;
@@ -22,12 +22,12 @@ export class AgileDocumentModel implements AgileDocument {
   constructor(data: AgileDocument) {
     this.id = data.id;
     this.title = data.title;
-    this.tags = data.tags;
-    this.rawContent = data.rawContent;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
-    this.lastUsedAt = data.lastUsedAt;
-    this.lastIndex = data.lastIndex;
+    this.tags = data.tags || [];
+    this.rawContent = data.rawContent || '';
+    this.createdAt = data.createdAt || Date.now();
+    this.updatedAt = data.updatedAt || Date.now();
+    this.lastUsedAt = data.lastUsedAt || Date.now();
+    this.lastIndex = data.lastIndex || 0;
   }
 
   update(title: string, tags: string[], content: string) {
@@ -39,5 +39,10 @@ export class AgileDocumentModel implements AgileDocument {
 
   markAccessed() {
     this.lastUsedAt = Date.now();
+  }
+
+  toIndex(): Omit<AgileDocument, 'rawContent'> {
+    const { rawContent, ...index } = this;
+    return index;
   }
 }

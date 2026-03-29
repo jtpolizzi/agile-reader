@@ -45,11 +45,14 @@ The application is a modern **Single Page Application (SPA)** using **Svelte 5 (
 5.  **Reader UI:** Auto-centering scroll, interactive TOC (follows reading position), and dynamic font scaling (using `em` units).
 6.  **Global Shortcuts:** Full keyboard control (`Space/W`, `S/Down`, `A/D/Arrows`, `Shift+Arrows`, `Q`, `T`, `?`).
 7.  **Preset Management:** Save/Load named configuration presets (Mixed-case supported).
+8.  **Storage Architecture Split (Performance Fix):** Separated document metadata (Index) from document text (Content) to allow instant catalogue loading.
+9.  **Parser Robustness:** Fixed the "Missing Lines" bug. Plain text lines are now parsed correctly.
+10. **UI Enhancements:** The active document title is now displayed in the main Header when in the Reader view.
 
 ### 🚧 Pending Tasks (Next Steps)
 1.  **Looping Logic:** Re-implement the "Heading Loop" feature (click heading to set a loop range).
-2.  **Auto-Pause (AP) Edge Cases:** Further verify behavior during manual navigation when AP is enabled.
-3.  **Mobile Polish:** Test PWA features (manifest/service worker) for "Add to Home Screen" support.
+2.  **Mobile Polish:** Test PWA features (manifest/service worker) for "Add to Home Screen" support.
+3.  **Auto-Pause (AP) Edge Cases:** Further verify behavior during manual navigation when AP is enabled.
 
 ## 5. Development Workflow & Rules
 

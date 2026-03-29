@@ -1,4 +1,4 @@
-export type SegmentType = 'heading' | 'drill';
+export type SegmentType = 'heading' | 'text';
 
 export interface BaseSegment {
   type: SegmentType;
@@ -16,14 +16,14 @@ export class HeadingSegment implements BaseSegment {
   ) {}
 }
 
-export class DrillSegment implements BaseSegment {
-  public readonly type = 'drill';
+export class TextSegment implements BaseSegment {
+  public readonly type = 'text';
   constructor(
     public es: string,
     public en: string,
-    public pauseOverrideMs: number | null,
+    public pause: number | null,
     public headingIdx: number
   ) {}
 }
 
-export type Segment = HeadingSegment | DrillSegment;
+export type Segment = HeadingSegment | TextSegment;

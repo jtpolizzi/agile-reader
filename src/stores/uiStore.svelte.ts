@@ -22,19 +22,13 @@
     "Deep Drill": { seq: "en-es", speedIdx: 1, pauseIdx: 2, layout: "side-by-side", autoPause: true, fontSize: 14, voiceNames: { es: "", en: "" }, voiceURIs: { es: "", en: "" } }
   });
   public currentPresetName = $state("");
+  public activeDocTitle = $state("");
 
   constructor() {
     this.loadState();
-    
-    // Auto-save state on changes
-    $effect.root(() => {
-      $effect(() => {
-        this.saveState();
-      });
-    });
   }
 
-  private saveState() {
+  public saveState() {
     const state = {
       currentView: this.currentView,
       sidebarOpen: this.sidebarOpen,
@@ -53,6 +47,7 @@
     };
     localStorage.setItem("agile_reader_ui_state", JSON.stringify(state));
   }
+
 
 
   private loadState() {
@@ -94,6 +89,11 @@
     this.fontSize = p.fontSize;
     if (p.voiceNames) this.voiceNames = { ...p.voiceNames };
     if (p.voiceURIs) this.voiceURIs = { ...p.voiceURIs };
+    
+    // Dispatch custom event to tell the engine to update its voices
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent('preset-loaded'));
+    }
   }
 
 }

@@ -13,7 +13,7 @@
 
 {#if uiStore.activeModal === 'help'}
 <div 
-  class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6"
+  class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6 pointer-events-auto"
   onclick={(e) => { if (e.target === e.currentTarget) uiStore.closeModal(); }}
   role="presentation"
 >

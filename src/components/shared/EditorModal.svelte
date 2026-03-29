@@ -24,13 +24,21 @@
   }
 
   // Expose this so the parent can call it when opening the modal
-  export function loadDoc(doc?: AgileDocumentModel) {
+  export async function loadDoc(doc?: AgileDocumentModel) {
     if (doc) {
+      // If the document is just a shell (no content), lazy-load it
+      if (!doc.rawContent) {
+        const fullDoc = await libraryStore.getFullDoc(doc.id);
+        if (fullDoc) {
+          doc = fullDoc;
+        }
+      }
+
       isEditing = true;
       editId = doc.id;
       title = doc.title;
       tags = doc.tags.join(', ');
-      content = doc.rawContent;
+      content = doc.rawContent || '';
       dates = { created: doc.createdAt, updated: doc.updatedAt, used: doc.lastUsedAt };
     } else {
       isEditing = false;
@@ -52,16 +60,16 @@
     }
   });
 
-  function save() {
+  async function save() {
     const t = title.trim() || 'Untitled Doc';
     const tagArray = tags.split(',').map(tag => tag.trim()).filter(Boolean);
     
     if (isEditing && editId) {
       // Find the existing doc
-      const existing = libraryStore.documents.find(d => d.id === editId);
+      const existing = await libraryStore.getFullDoc(editId);
       if (existing) {
         existing.update(t, tagArray, content);
-        libraryStore.save(existing);
+        await libraryStore.save(existing);
       }
     } else {
       // Create new doc
@@ -75,7 +83,7 @@
         lastUsedAt: Date.now(),
         lastIndex: 0
       });
-      libraryStore.save(newDoc);
+      await libraryStore.save(newDoc);
     }
     
     uiStore.closeModal();
@@ -84,7 +92,7 @@
 
 {#if uiStore.activeModal === 'editor'}
   <div 
-    class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6"
+    class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6 pointer-events-auto"
     onclick={(e) => { if (e.target === e.currentTarget) uiStore.closeModal(); }}
     role="presentation"
   >

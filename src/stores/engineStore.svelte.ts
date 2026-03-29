@@ -21,14 +21,11 @@ export class EngineStore {
   constructor() {
     this.initVoices();
 
-    // Re-sync voices when names change (e.g. from presets or settings)
-    $effect.root(() => {
-      $effect(() => {
-        uiStore.voiceNames.es;
-        uiStore.voiceNames.en;
+    if (typeof window !== "undefined") {
+      window.addEventListener("preset-loaded", () => {
         this.refreshVoices();
       });
-    });
+    }
   }
 
   private initVoices() {
@@ -36,8 +33,7 @@ export class EngineStore {
 
     const synth = window.speechSynthesis;
     
-    // Some mobile browsers need a "nudge" to load voices
-    const forceUpdate = () => {
+    const updateVoicesList = () => {
       const voices = synth.getVoices();
       console.log(`AudioEngine: Found ${voices.length} voices`);
       if (voices.length > 0) {
@@ -46,32 +42,32 @@ export class EngineStore {
       }
     };
 
-    // Listen for the official event
-    synth.onvoiceschanged = forceUpdate;
+    // Standard official event listener
+    synth.onvoiceschanged = updateVoicesList;
 
-    // Aggressive polling for mobile (runs a few times then stops)
-    let attempts = 0;
-    const poll = setInterval(() => {
-      forceUpdate();
-      attempts++;
-      
-      // HACK: If voices are still empty, try "nudging" the synth engine 
-      // with a silent utterance (required by some Android browsers)
-      if (this.availableVoices.length === 0 && attempts % 2 === 0) {
-        const nudge = new SpeechSynthesisUtterance("");
-        nudge.volume = 0;
-        synth.speak(nudge);
-      }
-
-      if (attempts > 20 || this.availableVoices.length > 0) clearInterval(poll);
-    }, 500);
-
-    // Initial check
-    forceUpdate();
+    // Initial check (in case voices are already loaded)
+    const initialVoices = synth.getVoices();
+    if (initialVoices.length > 0) {
+      this.availableVoices = initialVoices;
+      this.refreshVoices();
+    } else {
+      // Very light fallback nudge for specific mobile browsers, runs once
+      setTimeout(() => {
+        if (this.availableVoices.length === 0) {
+          const nudge = new SpeechSynthesisUtterance("");
+          nudge.volume = 0;
+          synth.speak(nudge);
+        }
+      }, 500);
+    }
   }
 
   public async manualRefresh() {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
+    
+    // Check if we already have voices, to prevent infinite loops when refreshing
+    if (this.availableVoices.length > 0) return;
+
     const synth = window.speechSynthesis;
     
     // Simple fetch
@@ -221,7 +217,7 @@ export class EngineStore {
         const wordCount = s[targetLang]?.split(" ").length || 0;
         const dynamicPause = basePause + (wordCount * 250);
         
-        await this.engine.wait(manualPause || dynamicPause);
+        await this.engine.wait(step.pause || manualPause || dynamicPause);
       }
     }
 
@@ -248,8 +244,8 @@ export class EngineStore {
     switch (uiStore.sequenceMode) {
       case "es-only": return [{ type: "speak", lang: "es" }];
       case "en-only": return [{ type: "speak", lang: "en" }];
-      case "en-es": return [{ type: "speak", lang: "en" }, { type: "wait" }, { type: "speak", lang: "es" }];
-      case "es-en": return [{ type: "speak", lang: "es" }, { type: "wait" }, { type: "speak", lang: "en" }];
+      case "en-es": return [{ type: "speak", lang: "en" }, { type: "wait", pause: 400 }, { type: "speak", lang: "es" }];
+      case "es-en": return [{ type: "speak", lang: "es" }, { type: "wait", pause: 400 }, { type: "speak", lang: "en" }];
       default: return [{ type: "speak", lang: "es" }];
     }
   }

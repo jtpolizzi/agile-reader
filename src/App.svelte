@@ -83,11 +83,11 @@
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("open-editor", openEditor);
 
-    const handleSaved = (e: CustomEvent) => {
+    const handleSaved = (e: any) => {
       const savedDoc = e.detail as AgileDocumentModel;
       // If the currently active doc was the one saved, re-parse it
       if (activeDoc && activeDoc.id === savedDoc.id) {
-        segments = MarkdownParser.parse(savedDoc.rawContent);
+        segments = MarkdownParser.parse(savedDoc.rawContent || '');
         engineStore.setSegments(segments);
         // Note: engineStore.currentIndex is reactive, so it stays the same
       }
@@ -101,15 +101,36 @@
     };
   });
 
-  function loadDocument(doc: AgileDocumentModel) {
+  async function loadDocument(doc: AgileDocumentModel) {
+    // If the document is just a shell (no content), lazy-load it
+    if (doc.rawContent === undefined || doc.rawContent === null || doc.rawContent === '') {
+      const fullDoc = await libraryStore.getFullDoc(doc.id);
+      if (fullDoc) {
+        doc = fullDoc;
+      } else {
+        doc.rawContent = '';
+      }
+    }
+
+    // Update last used timestamp locally and save
+    doc.lastUsedAt = Date.now();
+    await libraryStore.save(doc);
+
+    // Update active state
     activeDoc = doc;
+    uiStore.activeDocTitle = doc.title;
     localStorage.setItem("agile_reader_last_doc_id", doc.id);
-    segments = MarkdownParser.parse(doc.rawContent);
+    
+    // Parse the actual text (fallback to empty string to prevent crashes)
+    segments = MarkdownParser.parse(doc.rawContent || '');
+    
+    // Pass to the TTS engine
     engineStore.setSegments(segments);
     engineStore.setIndex(doc.lastIndex || 0);
+    
+    // Switch the view to the reader
     uiStore.currentView = "reader";
   }
-
   function openEditor() {
     if (activeDoc) {
       editorModal.loadDoc(activeDoc);
@@ -120,6 +141,9 @@
   }
 
   $effect(() => {
+    // Only run this logic if the library store has finished loading initially
+    if (!libraryStore.isLoaded) return;
+
     if (libraryStore.documents.length === 0) {
       const seed = new AgileDocumentModel({
         id: "default",
@@ -137,16 +161,32 @@
       const lastDocId = localStorage.getItem("agile_reader_last_doc_id");
       if (uiStore.currentView === "reader" && !activeDoc && lastDocId) {
         const doc = libraryStore.documents.find(d => d.id === lastDocId);
-        if (doc) loadDocument(doc);
+        if (doc) {
+          // Wrap in a microtask to prevent Svelte update cycle conflicts during mount
+          queueMicrotask(() => {
+            loadDocument(doc);
+          });
+        }
       }
+    }
+  });
+
+  // Auto-save UI state when it changes
+  $effect(() => {
+    // Only save if we aren't in the middle of a view transition
+    if (uiStore.currentView === "reader" || uiStore.currentView === "library") {
+      uiStore.saveState();
     }
   });
 
   // Auto-save document index when it changes
   $effect(() => {
     if (activeDoc && engineStore.currentIndex !== -1) {
-      activeDoc.lastIndex = engineStore.currentIndex;
-      libraryStore.save(activeDoc);
+      // Only save if the index actually changed from what's in the doc
+      if (activeDoc.lastIndex !== engineStore.currentIndex) {
+        activeDoc.lastIndex = engineStore.currentIndex;
+        libraryStore.save(activeDoc);
+      }
     }
   });
 </script>

@@ -2,15 +2,36 @@
   import { uiStore } from "../../stores/uiStore.svelte";
   import { engineStore } from "../../stores/engineStore.svelte";
 
-  let esVoices = $derived(engineStore.availableVoices.filter(v => v.lang.toLowerCase().startsWith("es") || v.lang.toLowerCase().startsWith("spa")));
-  let enVoices = $derived(engineStore.availableVoices.filter(v => v.lang.toLowerCase().startsWith("en") || v.lang.toLowerCase().startsWith("eng")));
-
-    let newPresetName = $state("");
+  let esVoices = $state<SpeechSynthesisVoice[]>([]);
+  let enVoices = $state<SpeechSynthesisVoice[]>([]);
 
   $effect(() => {
-    if (uiStore.currentView === "reader" || uiStore.activeModal === "settings") {
+    // Only update these when the available voices actually change, not derived
+    if (engineStore.availableVoices.length > 0) {
+      esVoices = engineStore.availableVoices.filter(v => 
+        v.lang.toLowerCase().startsWith("es") || 
+        v.lang.toLowerCase().startsWith("spa") ||
+        v.name.toLowerCase().includes("spanish")
+      );
+      
+      enVoices = engineStore.availableVoices.filter(v => 
+        v.lang.toLowerCase().startsWith("en") || 
+        v.lang.toLowerCase().startsWith("eng") ||
+        v.name.toLowerCase().includes("english")
+      );
+    }
+  });
+
+  let newPresetName = $state("");
+
+  // Only manual refresh when opening settings, not just by entering the reader
+  $effect(() => {
+    if (uiStore.activeModal === "settings") {
       engineStore.manualRefresh();
     }
+  });
+
+  $effect(() => {
     if (uiStore.currentPresetName) {
       newPresetName = uiStore.currentPresetName;
     }
@@ -50,7 +71,7 @@
     if (uiStore.currentPresetName === name) uiStore.currentPresetName = "";
   }
   $effect(() => {
-    if (uiStore.activeModal) {
+    if (uiStore.activeModal === 'settings') {
       const handleEsc = (e: KeyboardEvent) => {
         if (e.key === "Escape") uiStore.closeModal();
       };
@@ -62,7 +83,7 @@
 
 {#if uiStore.activeModal === 'settings'}
 <div 
-  class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6"
+  class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6 pointer-events-auto"
   onclick={(e) => { if (e.target === e.currentTarget) uiStore.closeModal(); }}
   role="presentation"
 >

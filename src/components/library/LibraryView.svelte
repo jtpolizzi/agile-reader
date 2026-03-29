@@ -55,12 +55,12 @@
     return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  function handleNew() {
-    onNew();
+  async function handleNew() {
+    await onNew();
   }
 
-  function handleEdit(doc: AgileDocumentModel) {
-    onEdit(doc);
+  async function handleEdit(doc: AgileDocumentModel) {
+    await onEdit(doc);
   }
 
   function handleDelete(id: string, title: string) {
