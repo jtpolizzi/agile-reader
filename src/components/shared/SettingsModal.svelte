@@ -162,16 +162,16 @@
             <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Fast</label><input type="number" bind:value={uiStore.speedValues[2]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Fast Rate"></div>
           </div>
           <div class="flex gap-2">
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Zero</label><input type="number" bind:value={uiStore.pauseValues[0]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Zero Buffer"></div>
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Short</label><input type="number" bind:value={uiStore.pauseValues[1]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Short Buffer"></div>
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Medium</label><input type="number" bind:value={uiStore.pauseValues[2]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Medium Buffer"></div>
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Long</label><input type="number" bind:value={uiStore.pauseValues[3]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Long Buffer"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Short</label><input type="number" bind:value={uiStore.pauseValues[0]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Short Buffer"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Medium</label><input type="number" bind:value={uiStore.pauseValues[1]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Medium Buffer"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Long</label><input type="number" bind:value={uiStore.pauseValues[2]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Long Buffer"></div>
           </div>
         </div>
       </div>
     </div>
     
-    <div class="p-6 border-t bg-slate-50 flex justify-end gap-3">
+    <div class="p-6 border-t bg-slate-50 flex justify-between gap-3">
+      <button onclick={() => { if(confirm("Are you sure you want to reset all settings to defaults? This cannot be undone.")) uiStore.resetAllSettings(); }} class="px-6 py-3 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded-xl font-black uppercase text-[10px] tracking-widest transition-colors">Factory Reset</button>
       <button onclick={() => uiStore.closeModal()} class="px-12 py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg">Done</button>
     </div>
   </div>

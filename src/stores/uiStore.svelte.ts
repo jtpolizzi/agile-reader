@@ -1,6 +1,6 @@
 ﻿export class UIStore {
   public currentView = $state<"library" | "reader">("library");
-  public sidebarOpen = $state(true);
+  public sidebarOpen = $state(false);
   public activeModal = $state<string | null>(null);
   
   // Reader specific settings
@@ -106,6 +106,41 @@
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent('preset-loaded'));
     }
+  }
+
+  public resetAllSettings() {
+    // Clear the local storage keys for settings and last document
+    localStorage.removeItem("agile_reader_ui_state");
+    localStorage.removeItem("agile_reader_last_doc_id");
+
+    // Revert to pure default state
+    this.sidebarOpen = false;
+    this.fontSize = 14;
+    this.layoutMode = "side-by-side";
+    this.sequenceMode = "en-es";
+    this.autoPause = false;
+    this.speedIdx = 2;
+    this.pauseIdx = 2;
+    
+    this.speedValues = [0.7, 1.0, 1.3];
+    this.pauseValues = [400, 2500, 4500];
+
+    this.voiceNames = { es: "", en: "" };
+    this.voiceURIs = { es: "", en: "" };
+
+    this.presets = {
+      "Classic Shadow": { seq: "es-only", speedIdx: 2, pauseIdx: 0, layout: "side-by-side", autoPause: false, fontSize: 14, voiceNames: { es: "", en: "" }, voiceURIs: { es: "", en: "" } },
+      "Deep Drill": { seq: "en-es", speedIdx: 1, pauseIdx: 2, layout: "side-by-side", autoPause: true, fontSize: 14, voiceNames: { es: "", en: "" }, voiceURIs: { es: "", en: "" } }
+    };
+    
+    this.currentPresetName = "";
+    
+    // We do NOT clear currentView, activeDocTitle, or activeModal 
+    // to prevent the UI from harshly breaking while the modal is open.
+    // The user can close the modal manually or navigate away safely.
+
+    // Save this fresh state immediately
+    this.saveState();
   }
 
 }
