@@ -49,6 +49,8 @@ The application is a modern **Single Page Application (SPA)** using **Svelte 5 (
 9.  **Parser Robustness:** Fixed the "Missing Lines" bug. Plain text lines are now parsed correctly.
 10. **UI Enhancements:** The active document title is now displayed in the main Header when in the Reader view.
 11. **Fixed Pause Logic:** Restored dynamic pause calculation (based on word count and user settings) and manual Markdown-defined overrides in dual-language modes.
+12. **Lead Language Anchoring:** Implemented dynamic spatial anchoring so the "Lead" language is visually prioritized (Left in Side-by-Side, Top in Stacked, and "Featured" styling applied dynamically).
+13. **UI/UX & Shortcuts Polish:** Expanded shortcuts (added `,` for Settings, `L` for Library), standardized hover tooltips in the Header, and streamlined the Settings Voice UI by relying entirely on native OS voice loading events.
 
 ### 🚧 Pending Tasks (Next Steps)
 1.  **Looping Logic:** Re-implement the "Heading Loop" feature (click heading to set a loop range).

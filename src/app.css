@@ -43,7 +43,8 @@
 
   /* Lead Language Styling */
   .layout-side-by-side.lead-es .seg-es,
-  .layout-over-under.lead-es .seg-es { 
+  .layout-over-under.lead-es .seg-es,
+  .layout-plain.lead-es .seg-es { 
     color: #0f172a; font-weight: 600; 
   }
   .layout-side-by-side.lead-es .seg-en,
@@ -52,7 +53,8 @@
   }
 
   .layout-side-by-side.lead-en .seg-en,
-  .layout-over-under.lead-en .seg-en { 
+  .layout-over-under.lead-en .seg-en,
+  .layout-plain.lead-en .seg-en { 
     color: #0f172a; font-weight: 600; font-size: 1.1em;
   }
   .layout-side-by-side.lead-en .seg-es,
