@@ -22,11 +22,11 @@ The application is a modern **Single Page Application (SPA)** using **Svelte 5 (
     /engine       <-- AudioEngine (Web Speech API wrapper with bug workarounds)
     /storage      <-- IDocumentRepository & LocalStorage implementation
   /stores         <-- THE REACTIVE BRIDGE
-    libraryStore.svelte.ts  <-- Svelte 5 Runes wrapping the Repository
+    catalogStore.svelte.ts  <-- Svelte 5 Runes wrapping the Repository
     engineStore.svelte.ts   <-- Svelte 5 Runes wrapping the AudioEngine
     uiStore.svelte.ts       <-- Global UI state (modals, settings, persistence)
   /components     <-- SVELTE PRESENTATION LAYER
-    /library      <-- The Catalogue table (LibraryView.svelte)
+    /catalog      <-- The Catalogue table (CatalogView.svelte)
     /reader       <-- The Markdown rendering engine (ReaderView.svelte)
     /hud          <-- The floating playback HUD (PlaybackHUD.svelte)
     /shared       <-- Header, Sidebar, Modals (Settings, Help, Editor)
@@ -41,7 +41,7 @@ The application is a modern **Single Page Application (SPA)** using **Svelte 5 (
 1.  **Core Engine:** Fully functional reading loop with EN/ES sequencing and Auto-Pause (AP).
 2.  **Audio Robustness:** Implemented workarounds for Chrome's 15s bug, queue clearing, and safety timeouts for missed events.
 3.  **UI State & Persistence:** All settings (font size, layout, speed, voices, sidebar state, active document, and reading position) are persisted to `localStorage`.
-4.  **Catalogue (Library):** Full CRUD with search, tag filtering, and sortable columns (Title, Created, Updated, Last Used).
+4.  **Catalogue (Catalog):** Full CRUD with search, tag filtering, and sortable columns (Title, Created, Updated, Last Used).
 5.  **Reader UI:** Auto-centering scroll, interactive TOC (follows reading position), and dynamic font scaling (using `em` units).
 6.  **Global Shortcuts:** Full keyboard control (`Space/W`, `S/Down`, `A/D/Arrows`, `Shift+Arrows`, `Q`, `T`, `?`).
 7.  **Preset Management:** Save/Load named configuration presets (Mixed-case supported).
@@ -50,7 +50,7 @@ The application is a modern **Single Page Application (SPA)** using **Svelte 5 (
 10. **UI Enhancements:** The active document title is now displayed in the main Header when in the Reader view.
 11. **Fixed Pause Logic:** Restored dynamic pause calculation (based on word count and user settings) and manual Markdown-defined overrides in dual-language modes.
 12. **Lead Language Anchoring:** Implemented dynamic spatial anchoring so the "Lead" language is visually prioritized (Left in Side-by-Side, Top in Stacked, and "Featured" styling applied dynamically).
-13. **UI/UX & Shortcuts Polish:** Expanded shortcuts (added `,` for Settings, `L` for Library), standardized hover tooltips in the Header, and streamlined the Settings Voice UI by relying entirely on native OS voice loading events.
+13. **UI/UX & Shortcuts Polish:** Expanded shortcuts (added `C` for Catalog, `L`, `R`, `P`, `V` for toggle controls), standardized hover tooltips in the Header, removed hardcoded text labels for mobile, and cleanly refactored the "Library" terminology out of the app.
 
 ### 🚧 Pending Tasks (Next Steps)
 1.  **Looping Logic:** Re-implement the "Heading Loop" feature (click heading to set a loop range).
@@ -72,7 +72,7 @@ export class MyStore {
 ```
 
 ### The Repository Pattern
-Do not call `localStorage` directly from components. Use `libraryStore`, which proxies to the `IDocumentRepository`.
+Do not call `localStorage` directly from components. Use `catalogStore`, which proxies to the `IDocumentRepository`.
 
 ### Tailwind & CSS
 *   Use Tailwind v3. Modifying the build pipeline to v4 may cause errors.
