@@ -57,6 +57,8 @@
 
 <div class="flex-1 overflow-y-auto custom-scroll scroll-smooth pb-40">
   <div class="max-w-6xl mx-auto py-2 reader-container layout-{uiStore.layoutMode} lead-{uiStore.leadLanguage}">
+    <h1 class="text-3xl md:text-4xl font-black text-slate-800 px-4 mt-8 mb-12 italic tracking-tight">{uiStore.activeDocTitle}</h1>
+
     {#each segments as seg, idx}
       {#if seg.type === 'heading'}
         <div 
