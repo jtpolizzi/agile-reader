@@ -1,5 +1,5 @@
 ﻿<script lang="ts">
-  import { libraryStore } from "../../stores/libraryStore.svelte";
+  import { catalogStore } from "../../stores/catalogStore.svelte";
   import { uiStore } from "../../stores/uiStore.svelte";
   import type { AgileDocumentModel } from "../../core/models/AgileDocument";
 
@@ -16,7 +16,7 @@
 
   // Derived filtered and sorted list
   let filteredDocuments = $derived.by(() => {
-    let list = libraryStore.documents;
+    let list = catalogStore.documents;
 
     // Filter by tag
     if (selectedTag) {
@@ -65,7 +65,7 @@
 
   function handleDelete(id: string, title: string) {
     if (confirm(`Are you sure you want to delete "${title}"?`)) {
-      libraryStore.delete(id);
+      catalogStore.delete(id);
     }
   }
 </script>
@@ -92,7 +92,7 @@
         class="bg-slate-100 border-none rounded-lg px-4 py-2 text-[9px] font-black uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-100"
       >
         <option value="">ALL TAGS</option>
-        {#each libraryStore.allTags as tag}
+        {#each catalogStore.allTags as tag}
           <option value={tag}>{tag}</option>
         {/each}
       </select>

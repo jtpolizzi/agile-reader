@@ -1,7 +1,7 @@
 import { LocalStorageRepository } from '../core/storage/LocalStorageRepository';
 import { AgileDocumentModel } from '../core/models/AgileDocument';
 
-export class LibraryStore {
+export class CatalogStore {
   public documents = $state<AgileDocumentModel[]>([]);
   public isLoaded = $state(false);
   private repo = new LocalStorageRepository();
@@ -49,4 +49,4 @@ export class LibraryStore {
   }
 }
 
-export const libraryStore = new LibraryStore();
+export const catalogStore = new CatalogStore();

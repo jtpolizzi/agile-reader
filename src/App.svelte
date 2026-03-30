@@ -1,9 +1,9 @@
 ﻿<script lang="ts">
-  import { libraryStore } from "./stores/libraryStore.svelte";
+  import { catalogStore } from "./stores/catalogStore.svelte";
   import { uiStore } from "./stores/uiStore.svelte";
   import { MarkdownParser } from "./core/parser/MarkdownParser";
   import type { Segment } from "./core/models/Segment";
-  import LibraryView from "./components/library/LibraryView.svelte";
+  import CatalogView from "./components/catalog/CatalogView.svelte";
   import ReaderView from "./components/reader/ReaderView.svelte";
   import PlaybackHUD from "./components/hud/PlaybackHUD.svelte";
   import Header from "./components/shared/Header.svelte";
@@ -37,7 +37,7 @@
       }
       if (key === "c") {
         e.preventDefault();
-        uiStore.currentView = "library";
+        uiStore.currentView = "catalog";
         return;
       }
 
@@ -128,7 +128,7 @@
   async function loadDocument(doc: AgileDocumentModel) {
     // If the document is just a shell (no content), lazy-load it
     if (doc.rawContent === undefined || doc.rawContent === null || doc.rawContent === '') {
-      const fullDoc = await libraryStore.getFullDoc(doc.id);
+      const fullDoc = await catalogStore.getFullDoc(doc.id);
       if (fullDoc) {
         doc = fullDoc;
       } else {
@@ -138,7 +138,7 @@
 
     // Update last used timestamp locally and save
     doc.lastUsedAt = Date.now();
-    await libraryStore.save(doc);
+    await catalogStore.save(doc);
 
     // Update active state
     activeDoc = doc;
@@ -165,10 +165,10 @@
   }
 
   $effect(() => {
-    // Only run this logic if the library store has finished loading initially
-    if (!libraryStore.isLoaded) return;
+    // Only run this logic if the catalog store has finished loading initially
+    if (!catalogStore.isLoaded) return;
 
-    if (libraryStore.documents.length === 0) {
+    if (catalogStore.documents.length === 0) {
       const seed = new AgileDocumentModel({
         id: "default",
         title: "Initial Foundations",
@@ -179,12 +179,12 @@
         lastUsedAt: Date.now(),
         lastIndex: 0
       });
-      libraryStore.save(seed);
+      catalogStore.save(seed);
     } else {
       // Restore last active document if we are in reader view
       const lastDocId = localStorage.getItem("agile_reader_last_doc_id");
       if (uiStore.currentView === "reader" && !activeDoc && lastDocId) {
-        const doc = libraryStore.documents.find(d => d.id === lastDocId);
+        const doc = catalogStore.documents.find(d => d.id === lastDocId);
         if (doc) {
           // Wrap in a microtask to prevent Svelte update cycle conflicts during mount
           queueMicrotask(() => {
@@ -198,7 +198,7 @@
   // Auto-save UI state when it changes
   $effect(() => {
     // Only save if we aren't in the middle of a view transition
-    if (uiStore.currentView === "reader" || uiStore.currentView === "library") {
+    if (uiStore.currentView === "reader" || uiStore.currentView === "catalog") {
       uiStore.saveState();
     }
   });
@@ -209,7 +209,7 @@
       // Only save if the index actually changed from what's in the doc
       if (activeDoc.lastIndex !== engineStore.currentIndex) {
         activeDoc.lastIndex = engineStore.currentIndex;
-        libraryStore.save(activeDoc);
+        catalogStore.save(activeDoc);
       }
     }
   });
@@ -228,8 +228,8 @@
       class="flex-1 flex flex-col relative bg-white overflow-hidden" 
       style="--reader-font-size: {uiStore.fontSize}px"
     >
-      {#if uiStore.currentView === "library"}
-        <LibraryView 
+      {#if uiStore.currentView === "catalog"}
+        <CatalogView 
           onSelect={loadDocument} 
           onEdit={(doc) => {
             editorModal.loadDoc(doc);

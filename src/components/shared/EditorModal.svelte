@@ -1,6 +1,6 @@
 <script lang="ts">
   import { uiStore } from '../../stores/uiStore.svelte';
-  import { libraryStore } from '../../stores/libraryStore.svelte';
+  import { catalogStore } from '../../stores/catalogStore.svelte';
   import { AgileDocumentModel } from '../../core/models/AgileDocument';
 
   let title = $state('');
@@ -28,7 +28,7 @@
     if (doc) {
       // If the document is just a shell (no content), lazy-load it
       if (!doc.rawContent) {
-        const fullDoc = await libraryStore.getFullDoc(doc.id);
+        const fullDoc = await catalogStore.getFullDoc(doc.id);
         if (fullDoc) {
           doc = fullDoc;
         }
@@ -66,10 +66,10 @@
     
     if (isEditing && editId) {
       // Find the existing doc
-      const existing = await libraryStore.getFullDoc(editId);
+      const existing = await catalogStore.getFullDoc(editId);
       if (existing) {
         existing.update(t, tagArray, content);
-        await libraryStore.save(existing);
+        await catalogStore.save(existing);
       }
     } else {
       // Create new doc
@@ -83,7 +83,7 @@
         lastUsedAt: Date.now(),
         lastIndex: 0
       });
-      await libraryStore.save(newDoc);
+      await catalogStore.save(newDoc);
     }
     
     uiStore.closeModal();
@@ -106,9 +106,9 @@
               <input bind:value={tags} type="text" placeholder="Tags (e.g. Grammar, Story)" class="w-full p-2 bg-white border border-slate-200 rounded text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
               
               <!-- Tag Suggestions -->
-              {#if libraryStore.allTags.length > 0}
+              {#if catalogStore.allTags.length > 0}
                 <div class="flex flex-wrap gap-1 mt-1">
-                  {#each libraryStore.allTags as tag}
+                  {#each catalogStore.allTags as tag}
                     {#if !tags.includes(tag)}
                       <button 
                         onclick={() => addTag(tag)}

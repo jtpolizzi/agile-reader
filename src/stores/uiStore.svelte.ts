@@ -1,5 +1,5 @@
 ﻿export class UIStore {
-  public currentView = $state<"library" | "reader">("library");
+  public currentView = $state<"catalog" | "reader">("catalog");
   public sidebarOpen = $state(false);
   public activeModal = $state<string | null>(null);
   
