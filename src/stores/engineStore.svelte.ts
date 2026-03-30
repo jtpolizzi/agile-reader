@@ -62,36 +62,6 @@ export class EngineStore {
     }
   }
 
-  public async manualRefresh() {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    
-    // Check if we already have voices, to prevent infinite loops when refreshing
-    if (this.availableVoices.length > 0) return;
-
-    const synth = window.speechSynthesis;
-    
-    // Simple fetch
-    let voices = synth.getVoices();
-    
-    // Simple nudge if empty
-    if (voices.length === 0) {
-      const nudge = new SpeechSynthesisUtterance(" ");
-      nudge.volume = 0;
-      synth.speak(nudge);
-      synth.cancel();
-      
-      // Short wait for sync
-      await new Promise(r => setTimeout(r, 100));
-      voices = synth.getVoices();
-    }
-
-    if (voices.length > 0) {
-      this.availableVoices = voices;
-      this.refreshVoices();
-      this.status = "Voices Ready";
-    }
-  }
-
   public refreshVoices() {
     if (this.availableVoices.length === 0) return;
 

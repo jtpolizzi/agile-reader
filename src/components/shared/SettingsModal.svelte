@@ -24,13 +24,6 @@
 
   let newPresetName = $state("");
 
-  // Only manual refresh when opening settings, not just by entering the reader
-  $effect(() => {
-    if (uiStore.activeModal === "settings") {
-      engineStore.manualRefresh();
-    }
-  });
-
   $effect(() => {
     if (uiStore.currentPresetName) {
       newPresetName = uiStore.currentPresetName;
@@ -136,17 +129,6 @@
       
       <div class="space-y-6">
         <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">System Voices</h4>
-        <div class="mb-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-[9px] font-bold text-slate-400 uppercase italic">Voices: {engineStore.availableVoices.length}</span>
-            <button 
-              onclick={() => engineStore.manualRefresh()}
-              class="text-[9px] bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded font-bold transition-colors"
-            >
-              REFRESH
-            </button>
-          </div>
-        </div>
         
         <div>
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">Spanish (ES)</label>
