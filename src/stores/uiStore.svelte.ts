@@ -9,6 +9,13 @@
   public sequenceMode = $state<"es-only" | "en-only" | "en-es" | "es-en">("en-es");
   public autoPause = $state(false);
   
+  // Ghosting / Recall System State
+  public ghostMode = $state<"NONE" | "ACTIVE">("NONE");
+  public ghostType = $state<"BLUR" | "HIDE">("BLUR");
+  public autoReveal = $state(false);
+  public revealDelay = $state(500); // ms
+  public revealedSegments = $state<Set<number>>(new Set());
+
   public leadLanguage = $derived(
     this.sequenceMode === "es-en" || this.sequenceMode === "es-only" ? "es" : "en"
   );
@@ -40,6 +47,10 @@
       layoutMode: this.layoutMode,
       sequenceMode: this.sequenceMode,
       autoPause: this.autoPause,
+      ghostMode: this.ghostMode,
+      ghostType: this.ghostType,
+      autoReveal: this.autoReveal,
+      revealDelay: this.revealDelay,
       speedIdx: this.speedIdx,
       pauseIdx: this.pauseIdx,
       speedValues: this.speedValues,
@@ -59,7 +70,9 @@
     if (saved) {
       try {
         const state = JSON.parse(saved);
-        Object.assign(this, state);
+        // Ensure revealedSegments doesn't get overwritten with plain object from JSON
+        const { revealedSegments, ...rest } = state;
+        Object.assign(this, rest);
       } catch (e) {
         console.error("Failed to load UI state", e);
       }
@@ -135,12 +148,27 @@
     this.layoutMode = p.layout;
     this.autoPause = p.autoPause;
     this.fontSize = p.fontSize;
+    if (p.ghostMode !== undefined) this.ghostMode = p.ghostMode;
+    if (p.ghostType !== undefined) this.ghostType = p.ghostType;
+    if (p.autoReveal !== undefined) this.autoReveal = p.autoReveal;
+    if (p.revealDelay !== undefined) this.revealDelay = p.revealDelay;
+
     if (p.voiceNames) this.voiceNames = { ...p.voiceNames };
     if (p.voiceURIs) this.voiceURIs = { ...p.voiceURIs };
     
     // Dispatch custom event to tell the engine to update its voices
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent('preset-loaded'));
+    }
+  }
+
+  public toggleGhostMode() {
+    if (this.ghostMode === "ACTIVE") {
+      this.ghostMode = "NONE";
+    } else {
+      // Activating ghost mode immediately obfuscates everything
+      this.revealedSegments = new Set();
+      this.ghostMode = "ACTIVE";
     }
   }
 
@@ -155,6 +183,11 @@
     this.layoutMode = "side-by-side";
     this.sequenceMode = "en-es";
     this.autoPause = false;
+    this.ghostMode = "NONE";
+    this.ghostType = "BLUR";
+    this.autoReveal = false;
+    this.revealDelay = 500;
+    this.revealedSegments = new Set();
     this.speedIdx = 2;
     this.pauseIdx = 2;
     

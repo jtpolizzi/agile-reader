@@ -21,6 +21,13 @@ export class EngineStore {
   constructor() {
     this.initVoices();
 
+    // Re-sync engine config whenever uiStore settings change
+    $effect.root(() => {
+      $effect(() => {
+        this.updateConfig(uiStore.speedValues, uiStore.pauseValues);
+      });
+    });
+
     if (typeof window !== "undefined") {
       window.addEventListener("preset-loaded", () => {
         this.refreshVoices();
@@ -159,6 +166,7 @@ export class EngineStore {
 
     const currentLock = ++this.executionId;
     const s = this.segments[this.currentIndex];
+    const currentIndexLock = this.currentIndex;
 
     // Sequence plan based on UI store
     const plan = this.getPlan();
@@ -168,11 +176,25 @@ export class EngineStore {
 
       if (step.type === "speak") {
         const lang = step.lang as "es" | "en";
-        const text = s[lang];
+        const text = s[lang as 'es' | 'en'];
         if (!text) continue;
 
         this.status = `${lang.toUpperCase()}: ${uiStore.sequenceMode.toUpperCase()}`;
         await this.engine.talk(text, lang, uiStore.speedIdx);
+        
+        // --- GHOSTING: Auto-Reveal Logic ---
+        // Trigger auto-reveal after the Lead Language finishes speaking
+        if (
+          uiStore.ghostMode === "ACTIVE" && 
+          uiStore.autoReveal && 
+          lang === uiStore.leadLanguage
+        ) {
+          setTimeout(() => {
+            const newSet = new Set(uiStore.revealedSegments);
+            newSet.add(currentIndexLock);
+            uiStore.revealedSegments = newSet;
+          }, uiStore.revealDelay);
+        }
       } else if (step.type === "wait") {
         if (uiStore.pauseIdx === 0) continue;
         
@@ -183,8 +205,9 @@ export class EngineStore {
         const manualPause = (s as any).p ? (s as any).p * 1000 : null;
         
         // Dynamic pause based on word count (heuristic from legacy)
+        // Wait time is based on the language we are waiting FOR (the next one)
         const targetLang = plan[plan.length - 1].lang as "es" | "en";
-        const wordCount = s[targetLang]?.split(" ").length || 0;
+        const wordCount = s[targetLang as 'es' | 'en']?.split(" ").length || 0;
         const dynamicPause = basePause + (wordCount * 250);
         
         await this.engine.wait(manualPause || dynamicPause);

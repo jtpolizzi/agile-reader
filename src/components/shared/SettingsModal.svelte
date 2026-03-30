@@ -77,6 +77,10 @@
       layout: uiStore.layoutMode,
       autoPause: uiStore.autoPause,
       fontSize: uiStore.fontSize,
+      ghostMode: uiStore.ghostMode,
+      ghostType: uiStore.ghostType,
+      autoReveal: uiStore.autoReveal,
+      revealDelay: uiStore.revealDelay,
       voiceNames: { ...uiStore.voiceNames },
       voiceURIs: { ...uiStore.voiceURIs }
     };
@@ -142,6 +146,41 @@
           {/each}
         </div>
         
+        <div class="pt-4 border-t">
+          <h4 class="text-[10px] font-black uppercase text-amber-500 tracking-widest mb-3">Ghosting System</h4>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-[9px] font-bold text-slate-400 uppercase">Obfuscation Type</label>
+              <select bind:value={uiStore.ghostType} class="p-1.5 bg-slate-50 border rounded text-[10px] font-bold outline-none focus:ring-2 focus:ring-amber-100">
+                <option value="BLUR">Blur Text</option>
+                <option value="HIDE">Hide Text</option>
+              </select>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <label class="text-[9px] font-bold text-slate-400 uppercase">Auto-Reveal</label>
+              <input type="checkbox" bind:checked={uiStore.autoReveal} class="w-4 h-4 accent-amber-500 cursor-pointer">
+            </div>
+            
+            {#if uiStore.autoReveal}
+              <div class="pt-1">
+                <label class="text-[9px] font-bold text-slate-400 block mb-2 uppercase flex justify-between">
+                  <span>Reveal Delay</span>
+                  <span class="text-amber-600">{(uiStore.revealDelay / 1000).toFixed(1)}s</span>
+                </label>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="2000" 
+                  step="100" 
+                  bind:value={uiStore.revealDelay}
+                  class="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                >
+              </div>
+            {/if}
+          </div>
+        </div>
+
         <div class="pt-4 border-t">
           <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest mb-3">UI Density Control</h4>
           <label class="text-[9px] font-bold text-slate-400 block mb-2 uppercase">Root Scaling ({uiStore.fontSize}px)</label>

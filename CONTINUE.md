@@ -50,12 +50,19 @@ The application is a modern **Single Page Application (SPA)** using **Svelte 5 (
 10. **UI Enhancements:** The active document title is now displayed in the main Header when in the Reader view.
 11. **Fixed Pause Logic:** Restored dynamic pause calculation (based on word count and user settings) and manual Markdown-defined overrides in dual-language modes.
 12. **Lead Language Anchoring:** Implemented dynamic spatial anchoring so the "Lead" language is visually prioritized (Left in Side-by-Side, Top in Stacked, and "Featured" styling applied dynamically).
-13. **UI/UX & Shortcuts Polish:** Expanded shortcuts (added `C` for Catalog, `L`, `R`, `P`, `V` for toggle controls), standardized hover tooltips in the Header, removed hardcoded text labels for mobile, and cleanly refactored the "Library" terminology out of the app.
+13. **UI/UX & Shortcuts Polish:** Expanded shortcuts (added `C` for Catalog, `L`, `R`, `P`, `V` for toggle controls), standardized hover tooltips in the Header, removed hardcoded text labels for mobile, and cleanly refactored the "Library" terminology out of the app. Shift + toggle shortcuts now cycle backwards.
+14. **Ghosting & Active Recall System:** Added the `Ghost Mode` feature (toggleable via `G` or the UI button). When active, the secondary language is obfuscated (Blur or Hide) and can be revealed manually via hover/click or automatically via the engine's Verification Loop after the Lead language finishes. Settings are integrated into presets and fully configurable.
+15. **Settings UI Enhancements:** Added an inline "Voice Test" button to the voice configuration screen. Restructured the settings modal to force a single column layout and properly collapse advanced features. Fixed layout overriding heading styles bug.
 
 ### 🚧 Pending Tasks (Next Steps)
+*Note: See `notes-docs/Future Roadmap.md` for detailed specifications on these upcoming phases.*
+
 1.  **Looping Logic:** Re-implement the "Heading Loop" feature (click heading to set a loop range).
-2.  **Mobile Polish:** Test PWA features (manifest/service worker) for "Add to Home Screen" support.
+2.  **Mobile Polish & PWA:** Test PWA features (manifest/service worker) for "Add to Home Screen" support and offline caching. Refine responsive breakpoints for mobile (e.g., adapting layout for narrow viewports).
 3.  **Auto-Pause (AP) Edge Cases:** Further verify behavior during manual navigation when AP is enabled.
+4.  **Cloud Connectivity (Phase 2):** Implement a Google Drive "Hybrid Repository" for cross-platform syncing. Transition from a monolithic index to atomic `.meta.json` files and introduce IndexedDB with background sync.
+5.  **Contextual "Define" UI (Phase 3):** Integrate on-demand AI API calls (Gemini/OpenAI) to provide contextual grammar and idiom explanations inside a non-intrusive UI drawer.
+6.  **Automated Content Pipeline (Phase 3):** Build a URL-to-Drill scraper proxy and utilize LLMs to automatically extract, structure (into Markdown), and translate web articles for seamless drill creation.
 
 ## 5. Development Workflow & Rules
 

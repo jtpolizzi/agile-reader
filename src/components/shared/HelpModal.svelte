@@ -108,6 +108,14 @@
           </div>
 
           <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-amber-500 text-white border border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)] rounded shrink-0 font-black text-[10px] w-12 text-center">GHOST</div>
+            <div>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Ghost Mode</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">G</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Toggle active recall obfuscation. Hides the secondary language until clicked/hovered or auto-revealed.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
             <div class="p-1.5 bg-slate-900 text-white border border-slate-900 rounded shrink-0 font-black text-[10px] w-7 text-center">N</div>
             <div>
               <div class="flex items-center gap-2"><span class="text-slate-900">Reading Speed</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">V</kbd></div>

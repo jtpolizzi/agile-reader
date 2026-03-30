@@ -2,25 +2,25 @@
 
 This document outlines the strategic evolution of the Agile Reader application, moving from a stable local-first architecture to an intelligent, multi-device "drill" platform.
 
-## Phase 1: Pedagogical Drill & UI Enhancements
+## ~~Phase 1: Pedagogical Drill & UI Enhancements~~ (DONE)
 
-**Priority: High** **Focus:** Refining the core learning experience and active recall mechanics.
+~~**Priority: High** **Focus:** Refining the core learning experience and active recall mechanics.~~
 
-### 1.1 Dynamic Reading Modes & Layout Strategy
+### ~~1.1 Dynamic Reading Modes & Layout Strategy~~
 
-- **Mode Logic:** Implementation of a "Strategy Pattern" for content sequencing.
-  - `EN_ONLY`, `ES_ONLY`: Single-language immersion.
-  - `EN_ES`, `ES_EN`: Traditional mirroring.
-  - **The "Target Primary" Rule:** Logic to ensure the language currently being read by the TTS is always positioned on the left (desktop) or top (mobile) to anchor the user's focus.
-- **Technical Implementation:** Use Svelte 5 `$derived` runes in `uiStore.svelte.ts` to transform the segment list into a "RenderableUnit" list without mutating the underlying document data.
+- ~~**Mode Logic:** Implementation of a "Strategy Pattern" for content sequencing.~~
+  - ~~`EN_ONLY`, `ES_ONLY`: Single-language immersion.~~
+  - ~~`EN_ES`, `ES_EN`: Traditional mirroring.~~
+  - ~~**The "Target Primary" Rule:** Logic to ensure the language currently being read by the TTS is always positioned on the left (desktop) or top (mobile) to anchor the user's focus.~~
+- ~~**Technical Implementation:** Use Svelte 5 `$derived` runes in `uiStore.svelte.ts` to transform the segment list into a "RenderableUnit" list without mutating the underlying document data.~~
 
-### 1.2 The Ghosting & Recall System
+### ~~1.2 The Ghosting & Recall System~~
 
-- **Visual Obfuscation:** * **Blur Mode:** CSS `filter: blur(5.0em)` to hide specific words while maintaining the structural "shape" of the sentence (providing context cues).
-  - **Hide Mode:** Complete opacity-zero masking.
-- **Interaction Model:**
-  - **Manual Reveal:** A tap/click gesture on a ghosted segment triggers a localized `isRevealed` state.
-  - **Auto-Reveal Sequence:** An optional setting where the ghosted text reveals itself exactly 500ms after the TTS audio for that segment finishes, serving as an "instant verification" loop.
+- ~~**Visual Obfuscation:** * **Blur Mode:** CSS `filter: blur(5.0em)` to hide specific words while maintaining the structural "shape" of the sentence (providing context cues).~~
+  - ~~**Hide Mode:** Complete opacity-zero masking.~~
+- ~~**Interaction Model:**~~
+  - ~~**Manual Reveal:** A tap/click gesture on a ghosted segment triggers a localized `isRevealed` state.~~
+  - ~~**Auto-Reveal Sequence:** An optional setting where the ghosted text reveals itself exactly 500ms after the TTS audio for that segment finishes, serving as an "instant verification" loop.~~
 
 ## Phase 2: Cloud Connectivity & Android Portability
 

@@ -67,6 +67,10 @@
         e.preventDefault();
         uiStore.cyclePause(shift);
       }
+      if (key === "g") {
+        e.preventDefault();
+        uiStore.toggleGhostMode();
+      }
       if (key === "v") {
         e.preventDefault();
         uiStore.cycleSpeed(shift);

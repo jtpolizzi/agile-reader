@@ -11,6 +11,34 @@
     return "reader-h3";
   }
 
+  function getGhostClass(lang: "es" | "en", idx: number) {
+    if (uiStore.ghostMode === "NONE") return "";
+    if (lang === uiStore.leadLanguage) return "";
+    if (uiStore.revealedSegments.has(idx)) return "";
+
+    return uiStore.ghostType === "BLUR" ? "ghosted-blur" : "ghosted-hide";
+  }
+
+  function handleGhostReveal(e: MouseEvent | TouchEvent, idx: number) {
+    // Only intercept if we are actively ghosting and it hasn't been revealed
+    if (uiStore.ghostMode === "ACTIVE" && !uiStore.revealedSegments.has(idx)) {
+      e.stopPropagation(); // Don't trigger play if clicking just to reveal
+      
+      // We must re-assign the set to trigger Svelte 5 reactivity for Sets
+      const newSet = new Set(uiStore.revealedSegments);
+      newSet.add(idx);
+      uiStore.revealedSegments = newSet;
+    }
+  }
+
+  function handleGhostHover(idx: number) {
+    if (uiStore.ghostMode === "ACTIVE" && !uiStore.revealedSegments.has(idx)) {
+      const newSet = new Set(uiStore.revealedSegments);
+      newSet.add(idx);
+      uiStore.revealedSegments = newSet;
+    }
+  }
+
   $effect(() => {
     if (engineStore.currentIndex !== -1) {
       const el = document.getElementById(`seg-${engineStore.currentIndex}`);
@@ -37,6 +65,13 @@
       title="Auto-Pause (Q)"
     >
       AP
+    </button>
+    <button 
+      onclick={(e) => { e.preventDefault(); uiStore.toggleGhostMode(); }} 
+      class="px-4 py-2 border rounded-lg text-[11px] font-black transition-all shadow-sm {uiStore.ghostMode === 'ACTIVE' ? 'bg-amber-500 text-white border-amber-600 shadow-[0_0_10px_rgba(245,158,11,0.4)]' : 'bg-white text-slate-400 border-slate-300 hover:bg-slate-50 hover:text-slate-600'}" 
+      title="Ghost Mode (G)"
+    >
+      GHOST
     </button>
   </div>
 
@@ -71,10 +106,24 @@
             engineStore.selectAndPlay(idx);
           }}
         >
-          <div class="seg-es heading-content-wrap {getHeadingClass(seg.level)}">
+          <div 
+            class="seg-es heading-content-wrap {getHeadingClass(seg.level)} {getGhostClass('es', idx)}"
+            onclick={(e) => handleGhostReveal(e, idx)}
+            onmouseenter={() => handleGhostHover(idx)}
+            role="button"
+            tabindex="0"
+            onkeydown={(e) => { if (e.key === 'Enter') handleGhostReveal(e as any, idx); }}
+          >
             <span>{seg.es}</span>
           </div>
-          <div class="seg-en heading-content-wrap {getHeadingClass(seg.level)}">{seg.en}</div>
+          <div 
+            class="seg-en heading-content-wrap {getHeadingClass(seg.level)} {getGhostClass('en', idx)}"
+            onclick={(e) => handleGhostReveal(e, idx)}
+            onmouseenter={() => handleGhostHover(idx)}
+            role="button"
+            tabindex="0"
+            onkeydown={(e) => { if (e.key === 'Enter') handleGhostReveal(e as any, idx); }}
+          >{seg.en}</div>
         </div>
       {:else}
         <div 
@@ -88,8 +137,22 @@
           }}
         >
           <div class="seg-grid">
-            <div class="seg-es">{seg.es}</div>
-            <div class="seg-en">{seg.en}</div>
+            <div 
+              class="seg-es {getGhostClass('es', idx)}"
+              onclick={(e) => handleGhostReveal(e, idx)}
+              onmouseenter={() => handleGhostHover(idx)}
+              role="button"
+              tabindex="0"
+              onkeydown={(e) => { if (e.key === 'Enter') handleGhostReveal(e as any, idx); }}
+            >{seg.es}</div>
+            <div 
+              class="seg-en {getGhostClass('en', idx)}"
+              onclick={(e) => handleGhostReveal(e, idx)}
+              onmouseenter={() => handleGhostHover(idx)}
+              role="button"
+              tabindex="0"
+              onkeydown={(e) => { if (e.key === 'Enter') handleGhostReveal(e as any, idx); }}
+            >{seg.en}</div>
           </div>
         </div>
       {/if}
