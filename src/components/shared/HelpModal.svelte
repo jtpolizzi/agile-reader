@@ -24,7 +24,7 @@
     <div class="space-y-6 text-left">
       <!-- UI Legend Section -->
       <div>
-        <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest mb-3 border-b pb-1">UI Reference</h4>
+        <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest mb-3 border-b pb-1">Primary Toolbar (Top)</h4>
         <div class="space-y-3 text-[11px] font-bold text-slate-600">
           
           <div class="flex items-start gap-3">
@@ -36,10 +36,26 @@
           </div>
 
           <div class="flex items-start gap-3">
-            <div class="p-1.5 bg-slate-100 text-slate-600 border rounded shrink-0 font-black text-[10px] w-7 text-center">AP</div>
+            <div class="p-1.5 bg-slate-900 text-white rounded shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></div>
             <div>
-              <div class="flex items-center gap-2"><span class="text-slate-900">Auto-Pause</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">Q</kbd></div>
-              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">When green, playback halts automatically after finishing the current segment.</p>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Catalog</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">C</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Return to the document catalog.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-slate-100 text-slate-600 border rounded shrink-0 font-black text-[10px] w-7 text-center">⚙️</div>
+            <div>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Presets Dropdown</span></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Quickly load saved configurations for speed, pauses, and layout.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-slate-900 text-white rounded shrink-0"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h8v14H3V5zm10 0h8v14h-8V5z"/></svg></div>
+            <div>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Layout Modes</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">L</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Toggle between Side-by-Side, Stacked, or Single Column view.</p>
             </div>
           </div>
 
@@ -52,18 +68,58 @@
           </div>
 
           <div class="flex items-start gap-3">
-            <div class="p-1.5 bg-slate-900 text-white rounded shrink-0"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 5h8v14H3V5zm10 0h8v14h-8V5z"/></svg></div>
+            <div class="p-1.5 bg-slate-900 text-white rounded shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></div>
             <div>
-              <div class="flex items-center gap-2"><span class="text-slate-900">Layout Modes</span></div>
-              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Toggle between Side-by-Side, Stacked, or Single Column view.</p>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Edit Content</span></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Open the Markdown editor to modify the current document.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-blue-600 text-white rounded shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+            <div>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Help Modal</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">?</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">You are here! View UI legend and keyboard shortcuts.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Secondary Toolbar Section -->
+      <div>
+        <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest mb-3 border-b pb-1">Secondary Toolbar (Document Top)</h4>
+        <div class="space-y-3 text-[11px] font-bold text-slate-600">
+          
+          <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-slate-100 text-slate-600 border rounded shrink-0 font-black text-[10px] w-12 text-center">EN ➔ ES</div>
+            <div>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Reading Mode</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">R</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Determines the reading order of the engine (e.g. English then Spanish).</p>
             </div>
           </div>
 
           <div class="flex items-start gap-3">
-            <div class="p-1.5 bg-slate-900 text-white rounded shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></div>
+            <div class="p-1.5 bg-slate-100 text-slate-600 border rounded shrink-0 font-black text-[10px] w-7 text-center">AP</div>
             <div>
-              <div class="flex items-center gap-2"><span class="text-slate-900">Library</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">L</kbd></div>
-              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Return to the document catalogue.</p>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Auto-Pause</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">Q</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">When green, playback halts automatically after finishing the current segment.</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-slate-900 text-white border border-slate-900 rounded shrink-0 font-black text-[10px] w-7 text-center">N</div>
+            <div>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Reading Speed</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">V</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Toggle TTS speed between S (Slow), N (Normal), and F (Fast).</p>
+            </div>
+          </div>
+
+          <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-slate-900 text-white border border-slate-900 rounded shrink-0 font-black text-[10px] w-7 text-center">0</div>
+            <div>
+              <div class="flex items-center gap-2"><span class="text-slate-900">Pause Values</span> <kbd class="px-1.5 py-0.5 bg-slate-100 border rounded text-[9px]">P</kbd></div>
+              <p class="text-[9px] font-normal text-slate-500 mt-0.5 leading-snug">Buffer wait time between sentences: 0 (None), S (Short), M (Medium), L (Long).</p>
             </div>
           </div>
 

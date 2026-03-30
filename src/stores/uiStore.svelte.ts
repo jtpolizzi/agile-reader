@@ -78,6 +78,26 @@
     }
   }
 
+  public cycleLayoutMode() {
+    const modes: ("side-by-side" | "over-under" | "plain")[] = ["side-by-side", "over-under", "plain"];
+    const idx = modes.indexOf(this.layoutMode);
+    this.layoutMode = modes[(idx + 1) % modes.length];
+  }
+
+  public cycleSequenceMode() {
+    const modes: ("es-only" | "en-only" | "en-es" | "es-en")[] = ["en-es", "es-en", "es-only", "en-only"];
+    const idx = modes.indexOf(this.sequenceMode);
+    this.sequenceMode = modes[(idx + 1) % modes.length];
+  }
+
+  public cyclePause() {
+    this.pauseIdx = (this.pauseIdx + 1) % 4; // 0, 1, 2, 3
+  }
+
+  public cycleSpeed() {
+    this.speedIdx = (this.speedIdx + 1) % 3; // 0, 1, 2
+  }
+
   public openModal(id: string) {
     this.activeModal = id;
   }

@@ -35,7 +35,7 @@
         uiStore.toggleSettings();
         return;
       }
-      if (key === "l") {
+      if (key === "c") {
         e.preventDefault();
         uiStore.currentView = "library";
         return;
@@ -54,6 +54,22 @@
       if (key === "t") {
         e.preventDefault();
         uiStore.toggleSidebar();
+      }
+      if (key === "l") {
+        e.preventDefault();
+        uiStore.cycleLayoutMode();
+      }
+      if (key === "r") {
+        e.preventDefault();
+        uiStore.cycleSequenceMode();
+      }
+      if (key === "p") {
+        e.preventDefault();
+        uiStore.cyclePause();
+      }
+      if (key === "v") {
+        e.preventDefault();
+        uiStore.cycleSpeed();
       }
       if (key === "s" || code === "ArrowDown") {
         e.preventDefault();
@@ -85,9 +101,6 @@
           engineStore.prev();
         }
       }
-      if (key === "1") uiStore.speedIdx = 1;
-      if (key === "2") uiStore.speedIdx = 2;
-      if (key === "3") uiStore.speedIdx = 3;
       if (key === "?") uiStore.openModal("help");
     };
 

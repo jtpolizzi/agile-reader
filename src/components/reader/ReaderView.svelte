@@ -23,7 +23,7 @@
 
 <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between gap-4 shrink-0 overflow-x-auto no-scrollbar">
   <div class="flex items-center gap-3">
-    <div class="flex items-center bg-white border border-slate-300 rounded-lg p-1 shadow-sm" title="Reading Mode">
+    <div class="flex items-center bg-white border border-slate-300 rounded-lg p-1 shadow-sm" title="Reading Mode ( R )">
       <select bind:value={uiStore.sequenceMode} class="bg-transparent text-[11px] font-black outline-none px-3 py-1.5 cursor-pointer uppercase appearance-none">
         <option value="es-only">ES ONLY</option>
         <option value="en-only">EN ONLY</option>
@@ -41,12 +41,12 @@
   </div>
 
   <div class="flex items-center gap-4">
-    <div class="flex items-center gap-1 bg-white border border-slate-300 rounded-lg p-1 shadow-sm">
-      <button onclick={(e) => { e.preventDefault(); uiStore.speedIdx = 1; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.speedIdx === 1 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">S</button>
-      <button onclick={(e) => { e.preventDefault(); uiStore.speedIdx = 2; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.speedIdx === 2 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">N</button>
-      <button onclick={(e) => { e.preventDefault(); uiStore.speedIdx = 3; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.speedIdx === 3 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">F</button>
+    <div class="flex items-center gap-1 bg-white border border-slate-300 rounded-lg p-1 shadow-sm" title="Reading Speed ( V )">
+      <button onclick={(e) => { e.preventDefault(); uiStore.speedIdx = 0; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.speedIdx === 0 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">S</button>
+      <button onclick={(e) => { e.preventDefault(); uiStore.speedIdx = 1; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.speedIdx === 1 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">N</button>
+      <button onclick={(e) => { e.preventDefault(); uiStore.speedIdx = 2; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.speedIdx === 2 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">F</button>
     </div>
-    <div class="flex items-center gap-1 bg-white border border-slate-300 rounded-lg p-1 shadow-sm">
+    <div class="flex items-center gap-1 bg-white border border-slate-300 rounded-lg p-1 shadow-sm" title="Pause Values ( P )">
       <button onclick={(e) => { e.preventDefault(); uiStore.pauseIdx = 0; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.pauseIdx === 0 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">0</button>
       <button onclick={(e) => { e.preventDefault(); uiStore.pauseIdx = 1; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.pauseIdx === 1 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">S</button>
       <button onclick={(e) => { e.preventDefault(); uiStore.pauseIdx = 2; }} class="w-10 h-8 text-[11px] font-black rounded-md transition-colors {uiStore.pauseIdx === 2 ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}">M</button>
