@@ -175,14 +175,15 @@
         <div class="space-y-4 pt-4 border-t">
           <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">Rate / Pause Values</h4>
           <div class="flex gap-2">
-            <input type="number" bind:value={uiStore.speedValues[0]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Slow Rate">
-            <input type="number" bind:value={uiStore.speedValues[1]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Natural Rate">
-            <input type="number" bind:value={uiStore.speedValues[2]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs" title="Fast Rate">
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Slow</label><input type="number" bind:value={uiStore.speedValues[0]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Slow Rate"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Normal</label><input type="number" bind:value={uiStore.speedValues[1]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Normal Rate"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Fast</label><input type="number" bind:value={uiStore.speedValues[2]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Fast Rate"></div>
           </div>
           <div class="flex gap-2">
-            <input type="number" bind:value={uiStore.pauseValues[0]} class="w-full p-2 bg-slate-50 border rounded text-xs" title="Short Buffer">
-            <input type="number" bind:value={uiStore.pauseValues[1]} class="w-full p-2 bg-slate-50 border rounded text-xs" title="Medium Buffer">
-            <input type="number" bind:value={uiStore.pauseValues[2]} class="w-full p-2 bg-slate-50 border rounded text-xs" title="Long Buffer">
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Zero</label><input type="number" bind:value={uiStore.pauseValues[0]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Zero Buffer"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Short</label><input type="number" bind:value={uiStore.pauseValues[1]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Short Buffer"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Medium</label><input type="number" bind:value={uiStore.pauseValues[2]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Medium Buffer"></div>
+            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Long</label><input type="number" bind:value={uiStore.pauseValues[3]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Long Buffer"></div>
           </div>
         </div>
       </div>

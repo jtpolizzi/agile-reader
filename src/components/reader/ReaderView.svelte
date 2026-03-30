@@ -23,7 +23,7 @@
 
 <div class="bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between gap-4 shrink-0 overflow-x-auto no-scrollbar">
   <div class="flex items-center gap-3">
-    <div class="flex items-center bg-white border border-slate-300 rounded-lg p-1 shadow-sm">
+    <div class="flex items-center bg-white border border-slate-300 rounded-lg p-1 shadow-sm" title="Reading Mode">
       <select bind:value={uiStore.sequenceMode} class="bg-transparent text-[11px] font-black outline-none px-3 py-1.5 cursor-pointer uppercase appearance-none">
         <option value="es-only">ES ONLY</option>
         <option value="en-only">EN ONLY</option>
@@ -56,7 +56,7 @@
 </div>
 
 <div class="flex-1 overflow-y-auto custom-scroll scroll-smooth pb-40">
-  <div class="max-w-6xl mx-auto py-2 reader-container layout-{uiStore.layoutMode}">
+  <div class="max-w-6xl mx-auto py-2 reader-container layout-{uiStore.layoutMode} lead-{uiStore.leadLanguage}">
     {#each segments as seg, idx}
       {#if seg.type === 'heading'}
         <div 

@@ -8,6 +8,10 @@
   public layoutMode = $state<"side-by-side" | "over-under" | "plain">("side-by-side");
   public sequenceMode = $state<"es-only" | "en-only" | "en-es" | "es-en">("en-es");
   public autoPause = $state(false);
+  
+  public leadLanguage = $derived(
+    this.sequenceMode === "es-en" || this.sequenceMode === "es-only" ? "es" : "en"
+  );
   public speedIdx = $state(2);
   public pauseIdx = $state(2);
 
@@ -64,6 +68,14 @@
 
   public toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  public toggleSettings() {
+    if (this.activeModal === "settings") {
+      this.closeModal();
+    } else {
+      this.openModal("settings");
+    }
   }
 
   public openModal(id: string) {

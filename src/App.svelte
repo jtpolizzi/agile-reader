@@ -30,6 +30,17 @@
       const code = e.code;
       const shift = e.shiftKey;
 
+      if (key === ",") {
+        e.preventDefault();
+        uiStore.toggleSettings();
+        return;
+      }
+      if (key === "l") {
+        e.preventDefault();
+        uiStore.currentView = "library";
+        return;
+      }
+
       if (uiStore.currentView !== "reader") return;
 
       if (key === "w" || code === "Space") {

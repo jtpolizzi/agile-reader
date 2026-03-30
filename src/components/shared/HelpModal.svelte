@@ -26,8 +26,10 @@
       <div class="flex justify-between"><span>Repeat Line</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">S / ↓</kbd></div>
       <div class="flex justify-between"><span>Next / Prev Line</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black">D / A / → / ←</kbd></div>
       <div class="flex justify-between"><span>Next / Prev Heading</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black uppercase">Shift + D/A/→/←</kbd></div>
-      <div class="flex justify-between"><span>Sidebar Toggle</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black uppercase">T</kbd></div>
+      <div class="flex justify-between"><span>TOC Toggle</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black uppercase">T</kbd></div>
       <div class="flex justify-between"><span>Auto-Pause (AP)</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black uppercase">Q</kbd></div>
+      <div class="flex justify-between"><span>Back to Library</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black uppercase">L</kbd></div>
+      <div class="flex justify-between"><span>Settings</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black uppercase">,</kbd></div>
       <div class="flex justify-between"><span>Show Help</span> <kbd class="px-2 py-0.5 bg-slate-100 border rounded text-slate-900 font-black uppercase">?</kbd></div>
     </div>
     
