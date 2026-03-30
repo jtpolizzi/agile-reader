@@ -24,6 +24,8 @@
 
   let newPresetName = $state("");
 
+  let showAdvanced = $state(false);
+
   $effect(() => {
     if (uiStore.currentPresetName) {
       newPresetName = uiStore.currentPresetName;
@@ -36,6 +38,30 @@
     if (es) uiStore.voiceNames.es = es.name;
     if (en) uiStore.voiceNames.en = en.name;
     engineStore.refreshVoices();
+  }
+
+  function testVoice(lang: "es" | "en") {
+    // Stop any current playback
+    engineStore.stop();
+    
+    // Find the voice
+    const voiceURI = uiStore.voiceURIs[lang];
+    const voice = engineStore.availableVoices.find(v => v.voiceURI === voiceURI);
+    
+    if (!voice) return;
+
+    // Use a simple test sentence
+    const text = lang === "es" ? "Hola, esta es una prueba de voz." : "Hello, this is a voice test.";
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = voice;
+    utterance.lang = lang === "es" ? "es-ES" : "en-US";
+    
+    // Use the current speed setting
+    const speedMap = uiStore.speedValues;
+    utterance.rate = speedMap[uiStore.speedIdx];
+
+    window.speechSynthesis.speak(utterance);
   }
 
 
@@ -86,9 +112,12 @@
       <button onclick={() => uiStore.closeModal()} class="text-slate-400 p-2">✕</button>
     </div>
     
-    <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto custom-scroll">
+    <div class="p-8 grid grid-cols-1 gap-8 max-h-[70vh] overflow-y-auto custom-scroll">
       <div class="space-y-6">
-        <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">Named Presets</h4>
+        <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest flex justify-between items-center">
+          Named Presets
+          <span class="text-slate-400 text-[8px] font-normal normal-case">{Object.keys(uiStore.presets).length} presets</span>
+        </h4>
         <div class="flex gap-2">
           <input 
             type="text" 
@@ -99,16 +128,16 @@
           <button onclick={saveNewPreset} class="px-4 py-2 bg-slate-900 text-white rounded text-[10px] font-black">SAVE</button>
         </div>
         
-        <div class="space-y-1">
+        <div class="space-y-1 max-h-[150px] overflow-y-auto custom-scroll pr-1 border border-slate-100 rounded-md p-1 bg-slate-50/50">
           {#each Object.keys(uiStore.presets).sort() as name}
-            <div class="flex items-center justify-between p-2 bg-slate-50 rounded text-[9px] font-bold group">
+            <div class="flex items-center justify-between p-2 bg-white border border-slate-100 rounded text-[9px] font-bold group shadow-sm hover:border-blue-200 transition-colors">
               <button 
                 onclick={() => uiStore.loadPreset(name)}
-                class="truncate pr-2 flex-1 text-left"
+                class="truncate pr-2 flex-1 text-left {uiStore.currentPresetName === name ? 'text-blue-600' : 'text-slate-700'}"
               >
                 {name}
               </button>
-              <button onclick={() => deletePreset(name)} class="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1">✕</button>
+              <button onclick={() => deletePreset(name)} class="text-red-400 hover:text-red-600 hover:bg-red-50 rounded px-2 opacity-0 group-hover:opacity-100 transition-all">✕</button>
             </div>
           {/each}
         </div>
@@ -132,46 +161,83 @@
         
         <div>
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">Spanish (ES)</label>
-          <select 
-            bind:value={uiStore.voiceURIs.es}
-            onchange={handleVoiceChange}
-            class="w-full p-2 bg-slate-50 border rounded text-xs mb-3 outline-none focus:ring-2 focus:ring-blue-100"
-          >
-            {#each esVoices as v}
-              <option value={v.voiceURI}>{v.name}</option>
-            {/each}
-          </select>
+          <div class="flex gap-2 mb-3">
+            <select 
+              bind:value={uiStore.voiceURIs.es}
+              onchange={handleVoiceChange}
+              class="flex-1 p-2 bg-slate-50 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              {#each esVoices as v}
+                <option value={v.voiceURI}>{v.name}</option>
+              {/each}
+            </select>
+            <button 
+              onclick={() => testVoice("es")}
+              class="px-3 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[10px] font-black hover:bg-blue-100 transition-colors"
+              title="Test Spanish Voice"
+            >
+              ▶
+            </button>
+          </div>
           
           <label class="text-[9px] font-bold text-slate-400 block mb-1 uppercase text-[8px]">English (EN)</label>
-          <select 
-            bind:value={uiStore.voiceURIs.en}
-            onchange={handleVoiceChange}
-            class="w-full p-2 bg-slate-50 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-100"
-          >
-            {#each enVoices as v}
-              <option value={v.voiceURI}>{v.name}</option>
-            {/each}
-          </select>
+          <div class="flex gap-2">
+            <select 
+              bind:value={uiStore.voiceURIs.en}
+              onchange={handleVoiceChange}
+              class="flex-1 p-2 bg-slate-50 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              {#each enVoices as v}
+                <option value={v.voiceURI}>{v.name}</option>
+              {/each}
+            </select>
+            <button 
+              onclick={() => testVoice("en")}
+              class="px-3 bg-blue-50 text-blue-600 border border-blue-200 rounded text-[10px] font-black hover:bg-blue-100 transition-colors"
+              title="Test English Voice"
+            >
+              ▶
+            </button>
+          </div>
         </div>
         
-        <div class="space-y-4 pt-4 border-t">
-          <h4 class="text-[10px] font-black uppercase text-blue-500 tracking-widest">Rate / Pause Values</h4>
-          <div class="flex gap-2">
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Slow</label><input type="number" bind:value={uiStore.speedValues[0]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Slow Rate"></div>
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Normal</label><input type="number" bind:value={uiStore.speedValues[1]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Normal Rate"></div>
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Fast</label><input type="number" bind:value={uiStore.speedValues[2]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Fast Rate"></div>
-          </div>
-          <div class="flex gap-2">
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Short</label><input type="number" bind:value={uiStore.pauseValues[0]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Short Buffer"></div>
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Medium</label><input type="number" bind:value={uiStore.pauseValues[1]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Medium Buffer"></div>
-            <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Long</label><input type="number" bind:value={uiStore.pauseValues[2]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Long Buffer"></div>
-          </div>
+        <div class="pt-4 border-t">
+          <button 
+            onclick={() => showAdvanced = !showAdvanced} 
+            class="text-[10px] font-black uppercase text-blue-500 tracking-widest flex items-center gap-2 hover:text-blue-700 transition-colors w-full"
+          >
+            {showAdvanced ? '▼' : '▶'} Advanced Settings
+          </button>
+          
+          {#if showAdvanced}
+            <div class="space-y-4 pt-4 mt-2 border-t border-slate-100/50">
+              <h4 class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Rate / Pause Values</h4>
+              <div class="flex gap-2">
+                <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Slow</label><input type="number" bind:value={uiStore.speedValues[0]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Slow Rate"></div>
+                <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Normal</label><input type="number" bind:value={uiStore.speedValues[1]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Normal Rate"></div>
+                <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Fast</label><input type="number" bind:value={uiStore.speedValues[2]} step="0.1" class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Fast Rate"></div>
+              </div>
+              <div class="flex gap-2">
+                <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Short</label><input type="number" bind:value={uiStore.pauseValues[0]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Short Buffer"></div>
+                <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Medium</label><input type="number" bind:value={uiStore.pauseValues[1]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Medium Buffer"></div>
+                <div class="w-full text-center"><label class="text-[8px] font-bold text-slate-400 block mb-1 uppercase">Long</label><input type="number" bind:value={uiStore.pauseValues[2]} class="w-full p-2 bg-slate-50 border rounded text-xs text-center" title="Long Buffer"></div>
+              </div>
+              
+              <div class="pt-4 mt-4 border-t border-red-100">
+                <button 
+                  onclick={() => { if(confirm("Are you sure you want to reset all settings to defaults? This cannot be undone.")) uiStore.resetAllSettings(); }} 
+                  class="w-full py-2 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded-lg font-black uppercase text-[10px] tracking-widest transition-colors"
+                >
+                  Factory Reset
+                </button>
+              </div>
+            </div>
+          {/if}
         </div>
       </div>
     </div>
     
-    <div class="p-6 border-t bg-slate-50 flex justify-between gap-3">
-      <button onclick={() => { if(confirm("Are you sure you want to reset all settings to defaults? This cannot be undone.")) uiStore.resetAllSettings(); }} class="px-6 py-3 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded-xl font-black uppercase text-[10px] tracking-widest transition-colors">Factory Reset</button>
+    <div class="p-6 border-t bg-slate-50 flex justify-end gap-3">
       <button onclick={() => uiStore.closeModal()} class="px-12 py-3 bg-blue-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg">Done</button>
     </div>
   </div>

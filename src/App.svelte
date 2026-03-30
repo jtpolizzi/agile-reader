@@ -57,19 +57,19 @@
       }
       if (key === "l") {
         e.preventDefault();
-        uiStore.cycleLayoutMode();
+        uiStore.cycleLayoutMode(shift);
       }
       if (key === "r") {
         e.preventDefault();
-        uiStore.cycleSequenceMode();
+        uiStore.cycleSequenceMode(shift);
       }
       if (key === "p") {
         e.preventDefault();
-        uiStore.cyclePause();
+        uiStore.cyclePause(shift);
       }
       if (key === "v") {
         e.preventDefault();
-        uiStore.cycleSpeed();
+        uiStore.cycleSpeed(shift);
       }
       if (key === "s" || code === "ArrowDown") {
         e.preventDefault();
